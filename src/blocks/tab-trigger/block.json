@@ -23,6 +23,10 @@
             "type": "string",
             "default": ""
         },
+        "isActiveOnLoad": {
+            "type": "boolean",
+            "default": false
+        },
         "cssDefault": {
             "type": "string",
             "default": ""

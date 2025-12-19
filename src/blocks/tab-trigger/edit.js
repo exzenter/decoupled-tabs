@@ -9,10 +9,11 @@ import {
     PanelBody,
     TextControl,
     TextareaControl,
+    ToggleControl,
 } from '@wordpress/components';
 
 export default function Edit({ attributes, setAttributes, clientId }) {
-    const { tabTarget, tabArea, cssDefault, cssHover, cssActive, triggerId } = attributes;
+    const { tabTarget, tabArea, isActiveOnLoad, cssDefault, cssHover, cssActive, triggerId } = attributes;
 
     const blockProps = useBlockProps({
         className: 'decoupled-tabs-trigger-editor',
@@ -46,6 +47,12 @@ export default function Edit({ attributes, setAttributes, clientId }) {
                         help={__('Specify if you have multiple Tab Areas on the page.', 'decoupled-tabs')}
                         value={tabArea}
                         onChange={(value) => setAttributes({ tabArea: value })}
+                    />
+                    <ToggleControl
+                        label={__('Active on page load', 'decoupled-tabs')}
+                        help={__('Set this trigger and its tab as active when the page loads.', 'decoupled-tabs')}
+                        checked={isActiveOnLoad}
+                        onChange={(value) => setAttributes({ isActiveOnLoad: value })}
                     />
                 </PanelBody>
                 <PanelBody title={__('Custom CSS', 'decoupled-tabs')} initialOpen={false}>

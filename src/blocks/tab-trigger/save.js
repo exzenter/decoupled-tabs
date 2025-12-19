@@ -1,7 +1,7 @@
 import { useBlockProps, InnerBlocks } from '@wordpress/block-editor';
 
 export default function save({ attributes }) {
-    const { tabTarget, tabArea, cssDefault, cssHover, cssActive, triggerId } = attributes;
+    const { tabTarget, tabArea, isActiveOnLoad, cssDefault, cssHover, cssActive, triggerId } = attributes;
 
     const dataAttributes = {
         'data-tab-target': tabTarget,
@@ -11,6 +11,11 @@ export default function save({ attributes }) {
     // Only add tab area if specified
     if (tabArea) {
         dataAttributes['data-tab-area'] = tabArea;
+    }
+
+    // Add active on load flag
+    if (isActiveOnLoad) {
+        dataAttributes['data-active-on-load'] = 'true';
     }
 
     // Store CSS as data attributes for frontend JS to apply

@@ -23,9 +23,21 @@
                 this.initTrigger(trigger);
             });
 
-            // Handle URL hash on load
+            // Handle triggers marked as active on load (takes priority over tab area default)
+            this.handleActiveOnLoadTriggers();
+
+            // Handle URL hash on load (takes highest priority)
             this.handleHashChange();
             window.addEventListener('hashchange', () => this.handleHashChange());
+        }
+
+        handleActiveOnLoadTriggers() {
+            const activeOnLoadTriggers = document.querySelectorAll('[data-tab-target][data-active-on-load="true"]');
+            activeOnLoadTriggers.forEach((trigger) => {
+                const tabId = trigger.dataset.tabTarget;
+                const tabAreaId = trigger.dataset.tabArea || null;
+                this.switchToTab(tabId, tabAreaId, null);
+            });
         }
 
         initTabArea(area) {
