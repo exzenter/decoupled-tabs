@@ -135,12 +135,14 @@
         }
 
         clearTriggerInlineStyles(trigger) {
-            // Store original computed styles or just clear custom ones
-            const cssProps = [
-                ...(trigger.dataset.cssDefault || ''),
-                ...(trigger.dataset.cssHover || ''),
-                ...(trigger.dataset.cssActive || '')
-            ].join(';').split(';')
+            // Collect all CSS properties from default, hover, and active states
+            const allCss = [
+                trigger.dataset.cssDefault || '',
+                trigger.dataset.cssHover || '',
+                trigger.dataset.cssActive || ''
+            ].join(';');
+
+            const cssProps = allCss.split(';')
                 .filter(d => d.includes(':'))
                 .map(d => d.split(':')[0].trim());
 
@@ -157,6 +159,7 @@
             // Find the target tab
             let targetTab = null;
             let tabArea = null;
+            let foundAreaId = tabAreaId;
 
             if (tabAreaId) {
                 // Look in specific tab area
@@ -171,6 +174,7 @@
                     if (found) {
                         targetTab = found;
                         tabArea = area;
+                        foundAreaId = areaId;
                         break;
                     }
                 }
@@ -185,8 +189,8 @@
                 return; // Prevent rapid switching during transition
             }
 
-            // Update trigger active states
-            this.updateTriggerStates(tabId, tabAreaId);
+            // Update trigger active states - pass the found area ID
+            this.updateTriggerStates(tabId, foundAreaId);
 
             // Perform the switch
             this.activateTab(targetTab, false, tabArea);
