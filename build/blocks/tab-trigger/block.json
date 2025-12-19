@@ -42,10 +42,30 @@
   },
   "supports": {
     "html": false,
-    "align": false,
+    "align": true,
     "spacing": {
       "margin": true,
       "padding": true
+    },
+    "layout": {
+      "default": {
+        "type": "flex",
+        "flexWrap": "nowrap"
+      },
+      "allowSwitching": true,
+      "allowEditing": true,
+      "allowInheriting": true,
+      "allowVerticalAlignment": true,
+      "allowJustification": true
+    },
+    "dimensions": {
+      "minHeight": true
+    },
+    "__experimentalBorder": {
+      "color": true,
+      "radius": true,
+      "style": true,
+      "width": true
     }
   },
   "editorScript": "file:./index.js",

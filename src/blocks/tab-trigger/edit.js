@@ -3,6 +3,7 @@ import {
     useBlockProps,
     InnerBlocks,
     InspectorControls,
+    useInnerBlocksProps,
 } from '@wordpress/block-editor';
 import {
     PanelBody,
@@ -16,6 +17,14 @@ export default function Edit({ attributes, setAttributes, clientId }) {
     const blockProps = useBlockProps({
         className: 'decoupled-tabs-trigger-editor',
     });
+
+    const innerBlocksProps = useInnerBlocksProps(
+        { className: 'decoupled-tabs-trigger-content' },
+        {
+            templateLock: false,
+            renderAppender: InnerBlocks.ButtonBlockAppender,
+        }
+    );
 
     // Generate a unique ID if not set
     if (!triggerId) {
@@ -64,26 +73,12 @@ export default function Edit({ attributes, setAttributes, clientId }) {
                 </PanelBody>
             </InspectorControls>
             <div {...blockProps}>
-                <div className="decoupled-tabs-trigger-header">
-                    <span className="decoupled-tabs-trigger-icon">⚡</span>
-                    <span className="decoupled-tabs-trigger-label">
-                        {__('Tab Trigger', 'decoupled-tabs')}
-                    </span>
-                    {tabTarget && (
-                        <code className="decoupled-tabs-trigger-target">→ {tabTarget}</code>
-                    )}
-                    {!tabTarget && (
-                        <span className="decoupled-tabs-trigger-warning">
-                            {__('Set target tab ID', 'decoupled-tabs')}
-                        </span>
-                    )}
-                </div>
-                <div className="decoupled-tabs-trigger-content">
-                    <InnerBlocks
-                        templateLock={false}
-                        renderAppender={InnerBlocks.ButtonBlockAppender}
-                    />
-                </div>
+                <div {...innerBlocksProps} />
+                {!tabTarget && (
+                    <div className="decoupled-tabs-trigger-notice">
+                        {__('Set target tab ID in sidebar', 'decoupled-tabs')}
+                    </div>
+                )}
             </div>
         </>
     );
