@@ -1,0 +1,74 @@
+.decoupled-tabs-area {
+    position: relative;
+}
+
+/* Tab content visibility */
+.decoupled-tabs-area .decoupled-tabs-content {
+    display: none;
+}
+
+.decoupled-tabs-area .decoupled-tabs-content.is-active {
+    display: block;
+}
+
+/* Transition: Fade */
+.decoupled-tabs-area[data-transition-type="fade"] .decoupled-tabs-content {
+    opacity: 0;
+    transition-property: opacity;
+}
+
+.decoupled-tabs-area[data-transition-type="fade"] .decoupled-tabs-content.is-active {
+    opacity: 1;
+}
+
+.decoupled-tabs-area[data-transition-type="fade"] .decoupled-tabs-content.is-transitioning {
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+}
+
+/* Transition: Slide Horizontal */
+.decoupled-tabs-area[data-transition-type="slide-horizontal"] .decoupled-tabs-content {
+    transform: translateX(100%);
+    transition-property: transform, opacity;
+}
+
+.decoupled-tabs-area[data-transition-type="slide-horizontal"] .decoupled-tabs-content.is-active {
+    transform: translateX(0);
+}
+
+.decoupled-tabs-area[data-transition-type="slide-horizontal"] .decoupled-tabs-content.is-exiting {
+    transform: translateX(-100%);
+}
+
+.decoupled-tabs-area[data-transition-type="slide-horizontal"] .decoupled-tabs-content.is-transitioning {
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+}
+
+/* Transition: Slide Vertical */
+.decoupled-tabs-area[data-transition-type="slide-vertical"] .decoupled-tabs-content {
+    transform: translateY(20px);
+    transition-property: transform, opacity;
+}
+
+.decoupled-tabs-area[data-transition-type="slide-vertical"] .decoupled-tabs-content.is-active {
+    transform: translateY(0);
+}
+
+.decoupled-tabs-area[data-transition-type="slide-vertical"] .decoupled-tabs-content.is-exiting {
+    transform: translateY(-20px);
+}
+
+.decoupled-tabs-area[data-transition-type="slide-vertical"] .decoupled-tabs-content.is-transitioning {
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+}

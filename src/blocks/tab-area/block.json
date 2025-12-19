@@ -1,0 +1,59 @@
+{
+    "$schema": "https://schemas.wp.org/trunk/block.json",
+    "apiVersion": 3,
+    "name": "decoupled-tabs/tab-area",
+    "version": "1.0.0",
+    "title": "Tab Area",
+    "category": "layout",
+    "icon": "table-row-after",
+    "description": "A container for tabbed content. Add Tab Content blocks inside.",
+    "keywords": [
+        "tabs",
+        "tabbed",
+        "content",
+        "panels"
+    ],
+    "textdomain": "decoupled-tabs",
+    "attributes": {
+        "defaultTab": {
+            "type": "string",
+            "default": ""
+        },
+        "transitionType": {
+            "type": "string",
+            "default": "fade",
+            "enum": [
+                "none",
+                "fade",
+                "slide-horizontal",
+                "slide-vertical"
+            ]
+        },
+        "transitionDuration": {
+            "type": "number",
+            "default": 300
+        },
+        "tabAreaId": {
+            "type": "string",
+            "default": ""
+        }
+    },
+    "supports": {
+        "html": false,
+        "align": [
+            "wide",
+            "full"
+        ],
+        "spacing": {
+            "margin": true,
+            "padding": true
+        },
+        "color": {
+            "background": true,
+            "text": true
+        }
+    },
+    "editorScript": "file:./index.js",
+    "editorStyle": "file:./index.css",
+    "style": "file:./style-index.css"
+}

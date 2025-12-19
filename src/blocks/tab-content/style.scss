@@ -1,0 +1,8 @@
+.decoupled-tabs-content {
+    /* Base state - hidden */
+}
+
+/* Active trigger state */
+[data-tab-target].is-active {
+    /* Optional: style for active tab trigger */
+}

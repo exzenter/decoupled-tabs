@@ -1,0 +1,50 @@
+.decoupled-tabs-trigger-editor {
+    border: 2px solid #9b59b6;
+    border-radius: 4px;
+    background: #f9f5fb;
+    overflow: hidden;
+}
+
+.decoupled-tabs-trigger-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%);
+    color: white;
+    font-size: 13px;
+}
+
+.decoupled-tabs-trigger-icon {
+    font-size: 14px;
+}
+
+.decoupled-tabs-trigger-label {
+    font-weight: 600;
+}
+
+.decoupled-tabs-trigger-target {
+    background: rgba(255, 255, 255, 0.2);
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-size: 11px;
+    font-family: monospace;
+    margin-left: auto;
+}
+
+.decoupled-tabs-trigger-warning {
+    margin-left: auto;
+    opacity: 0.8;
+    font-size: 12px;
+    font-style: italic;
+}
+
+.decoupled-tabs-trigger-content {
+    padding: 12px;
+    background: white;
+    min-height: 40px;
+}
+
+.decoupled-tabs-trigger-content>.block-editor-inner-blocks>.block-editor-block-list__layout {
+    min-height: 30px;
+}

@@ -1,0 +1,143 @@
+/* Frontend Tab Styles */
+
+.decoupled-tabs-area {
+    position: relative;
+    overflow: hidden;
+}
+
+/* Base tab content state - hidden */
+.decoupled-tabs-content {
+    display: none;
+    opacity: 0;
+}
+
+/* Active tab state */
+.decoupled-tabs-content.is-active {
+    display: block;
+    opacity: 1;
+}
+
+/* =====================
+   Transition: None
+   ===================== */
+.decoupled-tabs-area[data-transition-type="none"] .decoupled-tabs-content {
+    transition: none;
+}
+
+.decoupled-tabs-area[data-transition-type="none"] .decoupled-tabs-content.is-active {
+    display: block;
+    opacity: 1;
+}
+
+/* =====================
+   Transition: Fade
+   ===================== */
+.decoupled-tabs-area[data-transition-type="fade"] .decoupled-tabs-content {
+    transition-property: opacity;
+    transition-timing-function: ease-in-out;
+}
+
+.decoupled-tabs-area[data-transition-type="fade"] .decoupled-tabs-content.is-transitioning {
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+}
+
+.decoupled-tabs-area[data-transition-type="fade"] .decoupled-tabs-content.is-exiting {
+    opacity: 0;
+}
+
+/* =====================
+   Transition: Slide Horizontal
+   ===================== */
+.decoupled-tabs-area[data-transition-type="slide-horizontal"] {
+    overflow: hidden;
+}
+
+.decoupled-tabs-area[data-transition-type="slide-horizontal"] .decoupled-tabs-content {
+    transform: translateX(100%);
+    opacity: 1;
+    transition-property: transform;
+    transition-timing-function: ease-in-out;
+}
+
+.decoupled-tabs-area[data-transition-type="slide-horizontal"] .decoupled-tabs-content.is-active {
+    transform: translateX(0);
+}
+
+.decoupled-tabs-area[data-transition-type="slide-horizontal"] .decoupled-tabs-content.is-transitioning {
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+}
+
+.decoupled-tabs-area[data-transition-type="slide-horizontal"] .decoupled-tabs-content.is-exiting {
+    transform: translateX(-100%);
+}
+
+/* =====================
+   Transition: Slide Vertical
+   ===================== */
+.decoupled-tabs-area[data-transition-type="slide-vertical"] {
+    overflow: hidden;
+}
+
+.decoupled-tabs-area[data-transition-type="slide-vertical"] .decoupled-tabs-content {
+    transform: translateY(30px);
+    opacity: 0;
+    transition-property: transform, opacity;
+    transition-timing-function: ease-in-out;
+}
+
+.decoupled-tabs-area[data-transition-type="slide-vertical"] .decoupled-tabs-content.is-active {
+    transform: translateY(0);
+    opacity: 1;
+}
+
+.decoupled-tabs-area[data-transition-type="slide-vertical"] .decoupled-tabs-content.is-transitioning {
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+}
+
+.decoupled-tabs-area[data-transition-type="slide-vertical"] .decoupled-tabs-content.is-exiting {
+    transform: translateY(-30px);
+    opacity: 0;
+}
+
+/* =====================
+   Tab-level overrides
+   ===================== */
+/* When a tab has its own transition type */
+.decoupled-tabs-content[data-transition-type="none"] {
+    transition: none !important;
+}
+
+.decoupled-tabs-content[data-transition-type="fade"] {
+    transition-property: opacity !important;
+}
+
+.decoupled-tabs-content[data-transition-type="slide-horizontal"] {
+    transition-property: transform !important;
+}
+
+.decoupled-tabs-content[data-transition-type="slide-vertical"] {
+    transition-property: transform, opacity !important;
+}
+
+/* =====================
+   Trigger Active State
+   ===================== */
+[data-tab-target] {
+    cursor: pointer;
+}
+
+[data-tab-target].is-active {
+    /* Users can style this as desired */
+}

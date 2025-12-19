@@ -1,0 +1,62 @@
+{
+    "$schema": "https://schemas.wp.org/trunk/block.json",
+    "apiVersion": 3,
+    "name": "decoupled-tabs/tab-content",
+    "version": "1.0.0",
+    "title": "Tab Content",
+    "category": "layout",
+    "icon": "welcome-widgets-menus",
+    "description": "A single tab panel. Must be placed inside a Tab Area block.",
+    "keywords": [
+        "tab",
+        "panel",
+        "content"
+    ],
+    "textdomain": "decoupled-tabs",
+    "parent": [
+        "decoupled-tabs/tab-area"
+    ],
+    "attributes": {
+        "tabId": {
+            "type": "string",
+            "default": ""
+        },
+        "tabLabel": {
+            "type": "string",
+            "default": ""
+        },
+        "overrideTransition": {
+            "type": "boolean",
+            "default": false
+        },
+        "transitionType": {
+            "type": "string",
+            "default": "inherit",
+            "enum": [
+                "inherit",
+                "none",
+                "fade",
+                "slide-horizontal",
+                "slide-vertical"
+            ]
+        },
+        "transitionDuration": {
+            "type": "number",
+            "default": 0
+        }
+    },
+    "supports": {
+        "html": false,
+        "spacing": {
+            "margin": true,
+            "padding": true
+        },
+        "color": {
+            "background": true,
+            "text": true
+        }
+    },
+    "editorScript": "file:./index.js",
+    "editorStyle": "file:./index.css",
+    "style": "file:./style-index.css"
+}

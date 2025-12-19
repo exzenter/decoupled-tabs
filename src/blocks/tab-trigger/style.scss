@@ -1,0 +1,9 @@
+.decoupled-tabs-trigger {
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.decoupled-tabs-trigger:focus {
+    outline: 2px solid currentColor;
+    outline-offset: 2px;
+}

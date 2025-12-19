@@ -1,0 +1,25 @@
+# node_modules
+node_modules/
+
+# Build output (optional - include if you want built assets in repo)
+# build/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.sublime-*
+
+# Logs
+*.log
+npm-debug.log*
+
+# Package manager locks (optional)
+# package-lock.json
+
+# Environment
+.env
+.env.local

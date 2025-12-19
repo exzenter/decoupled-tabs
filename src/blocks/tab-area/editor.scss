@@ -1,0 +1,50 @@
+.decoupled-tabs-area-editor {
+	border: 2px dashed #007cba;
+	border-radius: 4px;
+	padding: 0;
+	background: #f0f6fc;
+	min-height: 100px;
+}
+
+.decoupled-tabs-area-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding: 8px 12px;
+	background: linear-gradient(135deg, #007cba 0%, #005a87 100%);
+	color: white;
+	border-radius: 2px 2px 0 0;
+	font-size: 13px;
+}
+
+.decoupled-tabs-area-label {
+	font-weight: 600;
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.decoupled-tabs-area-label code {
+	background: rgba(255, 255, 255, 0.2);
+	padding: 2px 6px;
+	border-radius: 3px;
+	font-size: 11px;
+	font-family: monospace;
+}
+
+.decoupled-tabs-area-info {
+	opacity: 0.8;
+	font-size: 12px;
+}
+
+.decoupled-tabs-area-content {
+	padding: 16px;
+	background: white;
+	border-radius: 0 0 2px 2px;
+}
+
+.decoupled-tabs-area-content > .block-editor-inner-blocks > .block-editor-block-list__layout {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+}
