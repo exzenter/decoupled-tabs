@@ -1,13 +1,13 @@
 import { useBlockProps, InnerBlocks } from '@wordpress/block-editor';
 
 export default function save({ attributes }) {
-    const { defaultTab, transitionType, transitionDuration, tabAreaId } = attributes;
+    const { defaultTab, smoothHeightTransition, transitionDuration, tabAreaId } = attributes;
 
     const blockProps = useBlockProps.save({
         className: 'decoupled-tabs-area',
         'data-tab-area-id': tabAreaId,
         'data-default-tab': defaultTab,
-        'data-transition-type': transitionType,
+        'data-smooth-height': smoothHeightTransition ? 'true' : 'false',
         'data-transition-duration': transitionDuration,
     });
 

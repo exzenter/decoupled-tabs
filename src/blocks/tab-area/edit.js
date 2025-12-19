@@ -7,21 +7,14 @@ import {
 import {
     PanelBody,
     TextControl,
-    SelectControl,
+    ToggleControl,
     RangeControl,
 } from '@wordpress/components';
 
 const ALLOWED_BLOCKS = ['decoupled-tabs/tab-content'];
 
-const TRANSITION_OPTIONS = [
-    { label: __('None', 'decoupled-tabs'), value: 'none' },
-    { label: __('Fade', 'decoupled-tabs'), value: 'fade' },
-    { label: __('Slide Horizontal', 'decoupled-tabs'), value: 'slide-horizontal' },
-    { label: __('Slide Vertical', 'decoupled-tabs'), value: 'slide-vertical' },
-];
-
 export default function Edit({ attributes, setAttributes, clientId }) {
-    const { defaultTab, transitionType, transitionDuration, tabAreaId } = attributes;
+    const { defaultTab, smoothHeightTransition, transitionDuration, tabAreaId } = attributes;
 
     const blockProps = useBlockProps({
         className: 'decoupled-tabs-area-editor',
@@ -49,21 +42,23 @@ export default function Edit({ attributes, setAttributes, clientId }) {
                         onChange={(value) => setAttributes({ defaultTab: value })}
                     />
                 </PanelBody>
-                <PanelBody title={__('Transition Animation', 'decoupled-tabs')}>
-                    <SelectControl
-                        label={__('Transition Type', 'decoupled-tabs')}
-                        value={transitionType}
-                        options={TRANSITION_OPTIONS}
-                        onChange={(value) => setAttributes({ transitionType: value })}
+                <PanelBody title={__('Smooth Height Transition', 'decoupled-tabs')}>
+                    <ToggleControl
+                        label={__('Enable Smooth Height', 'decoupled-tabs')}
+                        help={__('Animate the container height when switching between tabs of different heights.', 'decoupled-tabs')}
+                        checked={smoothHeightTransition}
+                        onChange={(value) => setAttributes({ smoothHeightTransition: value })}
                     />
-                    <RangeControl
-                        label={__('Duration (ms)', 'decoupled-tabs')}
-                        value={transitionDuration}
-                        onChange={(value) => setAttributes({ transitionDuration: value })}
-                        min={0}
-                        max={2000}
-                        step={50}
-                    />
+                    {smoothHeightTransition && (
+                        <RangeControl
+                            label={__('Duration (ms)', 'decoupled-tabs')}
+                            value={transitionDuration}
+                            onChange={(value) => setAttributes({ transitionDuration: value })}
+                            min={0}
+                            max={2000}
+                            step={50}
+                        />
+                    )}
                 </PanelBody>
             </InspectorControls>
             <div {...blockProps}>

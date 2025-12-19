@@ -1,6 +1,6 @@
 /**
  * Decoupled Tabs Frontend
- * Handles tab switching with transition animations
+ * Handles tab switching with smooth height transitions
  */
 
 (function () {
@@ -50,7 +50,7 @@
         initTabArea(area) {
             const areaId = area.dataset.tabAreaId;
             const defaultTab = area.dataset.defaultTab;
-            const transitionType = area.dataset.transitionType || 'fade';
+            const smoothHeight = area.dataset.smoothHeight === 'true';
             const transitionDuration = parseInt(area.dataset.transitionDuration, 10) || 300;
 
             const tabs = Array.from(area.querySelectorAll('.decoupled-tabs-content'));
@@ -58,7 +58,7 @@
             this.tabAreas.set(areaId, {
                 element: area,
                 tabs,
-                transitionType,
+                smoothHeight,
                 transitionDuration,
                 currentTab: null,
                 isTransitioning: false,
@@ -232,15 +232,8 @@
                 return;
             }
 
-            const { tabs, currentTab, transitionType, transitionDuration } = tabAreaData;
-
-            // Check for tab-specific transition override
-            const tabTransitionType = tab.dataset.transitionType || transitionType;
-            const tabTransitionDuration = tab.dataset.transitionDuration
-                ? parseInt(tab.dataset.transitionDuration, 10)
-                : transitionDuration;
-
-            const duration = immediate ? 0 : tabTransitionDuration;
+            const { element, tabs, currentTab, smoothHeight, transitionDuration } = tabAreaData;
+            const duration = immediate ? 0 : transitionDuration;
 
             if (currentTab === tab) {
                 return; // Already active
@@ -249,71 +242,76 @@
             // Mark as transitioning
             tabAreaData.isTransitioning = true;
 
-            // Hide all other tabs
-            tabs.forEach((t) => {
-                if (t !== tab) {
-                    this.hideTab(t, duration, tabTransitionType, t === currentTab);
+            if (smoothHeight && !immediate && currentTab) {
+                // Smooth height transition
+                this.animateHeightTransition(element, currentTab, tab, duration, tabs, tabAreaData);
+            } else {
+                // Instant switch
+                tabs.forEach((t) => {
+                    if (t !== tab) {
+                        t.classList.remove('is-active');
+                        t.setAttribute('aria-hidden', 'true');
+                    }
+                });
+
+                tab.classList.add('is-active');
+                tab.setAttribute('aria-hidden', 'false');
+
+                tabAreaData.currentTab = tab;
+                tabAreaData.isTransitioning = false;
+            }
+        }
+
+        animateHeightTransition(areaElement, fromTab, toTab, duration, allTabs, tabAreaData) {
+            // Get current height
+            const startHeight = areaElement.offsetHeight;
+
+            // Hide all tabs except the target, then measure target height
+            allTabs.forEach((t) => {
+                if (t !== toTab) {
+                    t.classList.remove('is-active');
+                    t.setAttribute('aria-hidden', 'true');
                 }
             });
 
-            // Show the target tab
-            this.showTab(tab, duration, tabTransitionType);
+            // Show target tab to measure its height
+            toTab.classList.add('is-active');
+            toTab.setAttribute('aria-hidden', 'false');
+
+            // Measure target height
+            const endHeight = areaElement.offsetHeight;
+
+            // Set starting height explicitly
+            areaElement.style.height = `${startHeight}px`;
+            areaElement.style.overflow = 'hidden';
+            areaElement.style.transition = `height ${duration}ms ease-in-out`;
+
+            // Force reflow
+            void areaElement.offsetHeight;
+
+            // Animate to target height
+            areaElement.style.height = `${endHeight}px`;
 
             // Update current tab reference
-            tabAreaData.currentTab = tab;
+            tabAreaData.currentTab = toTab;
 
-            // Reset transitioning state after animation
-            setTimeout(() => {
+            // Clean up after transition
+            const cleanup = () => {
+                areaElement.style.height = '';
+                areaElement.style.overflow = '';
+                areaElement.style.transition = '';
                 tabAreaData.isTransitioning = false;
-                // Clean up transitioning classes
-                tabs.forEach((t) => {
-                    t.classList.remove('is-transitioning', 'is-exiting');
-                });
-            }, duration);
-        }
+                areaElement.removeEventListener('transitionend', cleanup);
+            };
 
-        showTab(tab, duration, transitionType) {
-            // Set transition duration
-            tab.style.transitionDuration = `${duration}ms`;
+            areaElement.addEventListener('transitionend', cleanup);
 
-            // Add active class
-            tab.classList.add('is-active');
-
-            // Handle different transition types
-            if (transitionType === 'none' || duration === 0) {
-                tab.style.transitionDuration = '0ms';
-            } else if (transitionType === 'fade') {
-                tab.classList.add('is-transitioning');
-                // Trigger reflow for transition
-                void tab.offsetHeight;
-            } else if (transitionType === 'slide-horizontal' || transitionType === 'slide-vertical') {
-                tab.classList.add('is-transitioning');
-                // Trigger reflow
-                void tab.offsetHeight;
-            }
-
-            // Set ARIA attributes
-            tab.setAttribute('aria-hidden', 'false');
-        }
-
-        hideTab(tab, duration, transitionType, isCurrentTab = false) {
-            // Set transition duration
-            tab.style.transitionDuration = `${duration}ms`;
-
-            if (isCurrentTab && transitionType !== 'none' && duration > 0) {
-                // Add exiting animation for current tab
-                tab.classList.add('is-exiting', 'is-transitioning');
-
-                // Remove after transition
-                setTimeout(() => {
-                    tab.classList.remove('is-active', 'is-exiting', 'is-transitioning');
-                }, duration);
-            } else {
-                tab.classList.remove('is-active');
-            }
-
-            // Set ARIA attributes
-            tab.setAttribute('aria-hidden', 'true');
+            // Fallback cleanup in case transitionend doesn't fire
+            setTimeout(() => {
+                if (tabAreaData.isTransitioning) {
+                    cleanup();
+                }
+            }, duration + 50);
         }
 
         updateTriggerStates(activeTabId, tabAreaId = null) {

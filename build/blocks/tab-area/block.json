@@ -2,7 +2,7 @@
   "$schema": "https://schemas.wp.org/trunk/block.json",
   "apiVersion": 3,
   "name": "decoupled-tabs/tab-area",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "title": "Tab Area",
   "category": "layout",
   "icon": "table-row-after",
@@ -19,15 +19,9 @@
       "type": "string",
       "default": ""
     },
-    "transitionType": {
-      "type": "string",
-      "default": "fade",
-      "enum": [
-        "none",
-        "fade",
-        "slide-horizontal",
-        "slide-vertical"
-      ]
+    "smoothHeightTransition": {
+      "type": "boolean",
+      "default": false
     },
     "transitionDuration": {
       "type": "number",

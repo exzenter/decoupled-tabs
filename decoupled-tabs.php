@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Decoupled Tabs
  * Description: A Gutenberg block for decoupled tabbed content - any block can trigger tab switching
- * Version: 1.0.0
+ * Version: 1.1.0
  * Author: 
  * License: GPL-2.0-or-later
  * Text Domain: decoupled-tabs
@@ -12,7 +12,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'DECOUPLED_TABS_VERSION', '1.0.0' );
+define( 'DECOUPLED_TABS_VERSION', '1.1.0' );
 define( 'DECOUPLED_TABS_PATH', plugin_dir_path( __FILE__ ) );
 define( 'DECOUPLED_TABS_URL', plugin_dir_url( __FILE__ ) );
 

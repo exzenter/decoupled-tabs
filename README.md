@@ -4,7 +4,7 @@ A WordPress Gutenberg plugin for **decoupled tabbed content** where any block ca
 
 ## Features
 
-- **Tab Area Block** - Container with transition animations (fade, slide, none)
+- **Tab Area Block** - Container with optional smooth height transition
 - **Tab Content Block** - Individual tab panes with unique IDs
 - **Tab Trigger Block** - Wrapper with custom CSS for default/hover/active states
 - **Manual triggers** - Any element with `data-tab-target="id"` can switch tabs
@@ -21,7 +21,7 @@ A WordPress Gutenberg plugin for **decoupled tabbed content** where any block ca
 ### Tab Area + Content
 1. Insert **Tab Area** block
 2. Add **Tab Content** blocks inside with unique Tab IDs
-3. Configure transition animation and duration
+3. Configure smooth height transition if tabs have different heights
 
 ### Tab Triggers
 **Option A - Tab Trigger Block:**
@@ -32,14 +32,9 @@ A WordPress Gutenberg plugin for **decoupled tabbed content** where any block ca
 **Option B - Manual:**
 Add `data-tab-target="your-tab-id"` to any HTML element.
 
-## Transition Types
+## Smooth Height Transition
 
-| Type | Effect |
-|------|--------|
-| `none` | Instant switch |
-| `fade` | Opacity fade |
-| `slide-horizontal` | Slide left/right |
-| `slide-vertical` | Slide up with fade |
+Enable **Smooth Height Transition** in the Tab Area settings to animate the container height when switching between tabs with different heights. This prevents content below from jumping.
 
 ## Development
 
