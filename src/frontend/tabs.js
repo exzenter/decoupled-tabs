@@ -36,6 +36,13 @@
             activeOnLoadTriggers.forEach((trigger) => {
                 const tabId = trigger.dataset.tabTarget;
                 const tabAreaId = trigger.dataset.tabArea || null;
+
+                // Immediately apply active state to this trigger
+                trigger.classList.add('is-active');
+                trigger.setAttribute('aria-selected', 'true');
+                this.applyTriggerCSS(trigger, 'active');
+
+                // Switch to the associated tab
                 this.switchToTab(tabId, tabAreaId, null);
             });
         }
