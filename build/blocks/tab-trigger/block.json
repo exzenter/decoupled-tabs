@@ -27,18 +27,6 @@
       "type": "boolean",
       "default": false
     },
-    "cssDefault": {
-      "type": "string",
-      "default": ""
-    },
-    "cssHover": {
-      "type": "string",
-      "default": ""
-    },
-    "cssActive": {
-      "type": "string",
-      "default": ""
-    },
     "triggerId": {
       "type": "string",
       "default": ""
@@ -46,28 +34,27 @@
   },
   "supports": {
     "html": false,
-    "align": true,
+    "align": [
+      "wide",
+      "full"
+    ],
     "color": {
       "background": true,
-      "text": true
+      "text": true,
+      "link": true
     },
     "spacing": {
       "margin": true,
-      "padding": true
+      "padding": true,
+      "blockGap": true
     },
     "layout": {
-      "default": {
-        "type": "flex",
-        "flexWrap": "nowrap"
-      },
-      "allowSwitching": true,
+      "allowSwitching": false,
       "allowEditing": true,
       "allowInheriting": true,
-      "allowVerticalAlignment": true,
-      "allowJustification": true
-    },
-    "dimensions": {
-      "minHeight": true
+      "default": {
+        "type": "constrained"
+      }
     },
     "__experimentalBorder": {
       "color": true,

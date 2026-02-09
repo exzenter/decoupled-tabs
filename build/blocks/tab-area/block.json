@@ -30,6 +30,30 @@
     "tabAreaId": {
       "type": "string",
       "default": ""
+    },
+    "gsapEnabled": {
+      "type": "boolean",
+      "default": false
+    },
+    "gsapShuffleIterations": {
+      "type": "number",
+      "default": 2
+    },
+    "gsapCharDuration": {
+      "type": "number",
+      "default": 0.02
+    },
+    "gsapStaggerAmount": {
+      "type": "number",
+      "default": 0.25
+    },
+    "gsapStaggerDelay": {
+      "type": "number",
+      "default": 0.03
+    },
+    "gsapOnEnterDuration": {
+      "type": "number",
+      "default": 0.02
     }
   },
   "supports": {

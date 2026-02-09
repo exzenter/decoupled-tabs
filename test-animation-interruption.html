@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Animation Interruption Test - Decoupled Tabs</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        
+        .test-section {
+            margin-bottom: 40px;
+            padding: 20px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+        }
+        
+        .test-section h2 {
+            margin-top: 0;
+            color: #333;
+        }
+        
+        .tab-triggers {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .tab-trigger {
+            padding: 10px 20px;
+            background: #f0f0f0;
+            border: 2px solid #ccc;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .tab-trigger:hover {
+            background: #e0e0e0;
+        }
+        
+        .tab-trigger.is-active {
+            background: #007bff;
+            color: white;
+            border-color: #0056b3;
+        }
+        
+        .decoupled-tabs-area {
+            border: 1px solid #ddd;
+            padding: 20px;
+            border-radius: 4px;
+            background: #f9f9f9;
+            min-height: 200px;
+        }
+        
+        .decoupled-tabs-content {
+            display: none;
+            font-size: 18px;
+            line-height: 1.6;
+        }
+        
+        .decoupled-tabs-content.is-active {
+            display: block;
+        }
+        
+        .rapid-switch-buttons {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+        }
+        
+        .rapid-switch-buttons button {
+            padding: 10px 20px;
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .rapid-switch-buttons button:hover {
+            background: #218838;
+        }
+        
+        .test-log {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            max-height: 200px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        
+        .test-log div {
+            margin-bottom: 5px;
+        }
+        
+        .test-log .success {
+            color: #28a745;
+        }
+        
+        .test-log .error {
+            color: #dc3545;
+        }
+        
+        .test-log .info {
+            color: #17a2b8;
+        }
+    </style>
+</head>
+<body>
+    <h1>Animation Interruption Handling Test</h1>
+    <p>This page tests that rapid tab switching properly kills animations and prevents queue buildup.</p>
+    
+    <!-- Test 1: Manual Rapid Switching -->
+    <div class="test-section">
+        <h2>Test 1: Manual Rapid Tab Switching</h2>
+        <p>Click tabs rapidly to test interruption handling. Animations should be killed cleanly without queue buildup.</p>
+        
+        <div class="tab-triggers">
+            <button class="tab-trigger is-active" data-tab-target="tab1" data-tab-area="area1">Tab 1</button>
+            <button class="tab-trigger" data-tab-target="tab2" data-tab-area="area1">Tab 2</button>
+            <button class="tab-trigger" data-tab-target="tab3" data-tab-area="area1">Tab 3</button>
+        </div>
+        
+        <div class="decoupled-tabs-area" 
+             data-tab-area-id="area1"
+             data-smooth-height="false"
+             data-gsap-enabled="true"
+             data-gsap-shuffle-iterations="3"
+             data-gsap-char-duration="0.03"
+             data-gsap-stagger-amount="0.5"
+             data-gsap-stagger-delay="0.05"
+             data-gsap-on-enter-duration="0.03">
+            
+            <div class="decoupled-tabs-content is-active" data-tab-id="tab1">
+                This is the content for Tab 1. It contains enough text to demonstrate the character animation effect when switching between tabs. The shuffle animation should be interrupted cleanly if you switch tabs rapidly.
+            </div>
+            
+            <div class="decoupled-tabs-content" data-tab-id="tab2">
+                This is the content for Tab 2. Try clicking between tabs very quickly to test the interruption handling. The animations should stop immediately and restart without any queue buildup or visual glitches.
+            </div>
+            
+            <div class="decoupled-tabs-content" data-tab-id="tab3">
+                This is the content for Tab 3. The animation interruption system ensures that when you switch tabs during an animation, the current animation is killed, the element state is reset, and the new animation starts fresh.
+            </div>
+        </div>
+    </div>
+    
+    <!-- Test 2: Automated Rapid Switching -->
+    <div class="test-section">
+        <h2>Test 2: Automated Rapid Tab Switching</h2>
+        <p>Use these buttons to trigger rapid automated tab switches and verify clean interruption.</p>
+        
+        <div class="tab-triggers">
+            <button class="tab-trigger is-active" data-tab-target="tab4" data-tab-area="area2">Tab A</button>
+            <button class="tab-trigger" data-tab-target="tab5" data-tab-area="area2">Tab B</button>
+            <button class="tab-trigger" data-tab-target="tab6" data-tab-area="area2">Tab C</button>
+        </div>
+        
+        <div class="decoupled-tabs-area" 
+             data-tab-area-id="area2"
+             data-smooth-height="false"
+             data-gsap-enabled="true"
+             data-gsap-shuffle-iterations="4"
+             data-gsap-char-duration="0.02"
+             data-gsap-stagger-amount="0.6"
+             data-gsap-stagger-delay="0.04"
+             data-gsap-on-enter-duration="0.02">
+            
+            <div class="decoupled-tabs-content is-active" data-tab-id="tab4">
+                Tab A content with longer text for animation testing. The rapid switching test will cycle through tabs automatically to verify that animations are properly interrupted and cleaned up without memory leaks or visual artifacts.
+            </div>
+            
+            <div class="decoupled-tabs-content" data-tab-id="tab5">
+                Tab B content demonstrates the shuffle effect interruption. When tabs switch rapidly, each animation should be killed immediately, the element state should be reset, and the new animation should start cleanly without any leftover effects.
+            </div>
+            
+            <div class="decoupled-tabs-content" data-tab-id="tab6">
+                Tab C content verifies that the animation cleanup is thorough. The system should clear all GSAP tweens, timelines, and text splitter instances to prevent memory leaks and ensure smooth operation even after many rapid switches.
+            </div>
+        </div>
+        
+        <div class="rapid-switch-buttons">
+            <button id="rapid-switch-5">Switch 5 Times (100ms)</button>
+            <button id="rapid-switch-10">Switch 10 Times (50ms)</button>
+            <button id="rapid-switch-20">Switch 20 Times (25ms)</button>
+        </div>
+        
+        <div class="test-log" id="test-log">
+            <div class="info">Test log will appear here...</div>
+        </div>
+    </div>
+    
+    <!-- Load GSAP -->
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/SplitText.min.js"></script>
+    
+    <!-- Load Decoupled Tabs -->
+    <script src="build/frontend/tabs.js"></script>
+    
+    <!-- Test Script -->
+    <script>
+        const testLog = document.getElementById('test-log');
+        
+        function log(message, type = 'info') {
+            const div = document.createElement('div');
+            div.className = type;
+            div.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            testLog.appendChild(div);
+            testLog.scrollTop = testLog.scrollHeight;
+        }
+        
+        // Rapid switch test functions
+        function rapidSwitch(count, delay) {
+            log(`Starting rapid switch test: ${count} switches with ${delay}ms delay`, 'info');
+            const tabs = ['tab4', 'tab5', 'tab6'];
+            let currentIndex = 0;
+            let switchCount = 0;
+            
+            const interval = setInterval(() => {
+                currentIndex = (currentIndex + 1) % tabs.length;
+                const tabId = tabs[currentIndex];
+                
+                // Find the trigger and click it
+                const trigger = document.querySelector(`[data-tab-target="${tabId}"][data-tab-area="area2"]`);
+                if (trigger) {
+                    trigger.click();
+                    switchCount++;
+                    log(`Switch ${switchCount}/${count}: Activated ${tabId}`, 'success');
+                }
+                
+                if (switchCount >= count) {
+                    clearInterval(interval);
+                    log(`Rapid switch test complete! ${count} switches executed.`, 'success');
+                    
+                    // Check for any lingering animations
+                    setTimeout(() => {
+                        const area = document.querySelector('[data-tab-area-id="area2"]');
+                        const tabs = area.querySelectorAll('.decoupled-tabs-content');
+                        let hasActiveTweens = false;
+                        
+                        tabs.forEach(tab => {
+                            if (tab.currentTween) {
+                                hasActiveTweens = true;
+                                log(`WARNING: Tab ${tab.dataset.tabId} still has active tween!`, 'error');
+                            }
+                            if (tab.textSplitter) {
+                                log(`WARNING: Tab ${tab.dataset.tabId} still has text splitter!`, 'error');
+                            }
+                        });
+                        
+                        if (!hasActiveTweens) {
+                            log('✓ No lingering animations detected - cleanup successful!', 'success');
+                        }
+                    }, 1000);
+                }
+            }, delay);
+        }
+        
+        // Attach event listeners to rapid switch buttons
+        document.getElementById('rapid-switch-5').addEventListener('click', () => {
+            rapidSwitch(5, 100);
+        });
+        
+        document.getElementById('rapid-switch-10').addEventListener('click', () => {
+            rapidSwitch(10, 50);
+        });
+        
+        document.getElementById('rapid-switch-20').addEventListener('click', () => {
+            rapidSwitch(20, 25);
+        });
+        
+        // Log when page is ready
+        window.addEventListener('load', () => {
+            log('Page loaded. GSAP and Decoupled Tabs initialized.', 'success');
+            log('Ready for testing!', 'info');
+        });
+    </script>
+</body>
+</html>

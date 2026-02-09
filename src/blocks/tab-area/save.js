@@ -6,6 +6,12 @@ export default function save( { attributes } ) {
 		smoothHeightTransition,
 		transitionDuration,
 		tabAreaId,
+		gsapEnabled,
+		gsapShuffleIterations,
+		gsapCharDuration,
+		gsapStaggerAmount,
+		gsapStaggerDelay,
+		gsapOnEnterDuration,
 	} = attributes;
 
 	const blockProps = useBlockProps.save( {
@@ -14,6 +20,12 @@ export default function save( { attributes } ) {
 		'data-default-tab': defaultTab,
 		'data-smooth-height': smoothHeightTransition ? 'true' : 'false',
 		'data-transition-duration': transitionDuration,
+		'data-gsap-enabled': gsapEnabled ? 'true' : 'false',
+		'data-gsap-shuffle-iterations': gsapShuffleIterations,
+		'data-gsap-char-duration': gsapCharDuration,
+		'data-gsap-stagger-amount': gsapStaggerAmount,
+		'data-gsap-stagger-delay': gsapStaggerDelay,
+		'data-gsap-on-enter-duration': gsapOnEnterDuration,
 	} );
 
 	return (

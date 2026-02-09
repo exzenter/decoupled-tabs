@@ -8,7 +8,6 @@ import {
 import {
 	PanelBody,
 	TextControl,
-	TextareaControl,
 	ToggleControl,
 } from '@wordpress/components';
 
@@ -17,9 +16,6 @@ export default function Edit( { attributes, setAttributes, clientId } ) {
 		tabTarget,
 		tabArea,
 		isActiveOnLoad,
-		cssDefault,
-		cssHover,
-		cssActive,
 		triggerId,
 	} = attributes;
 
@@ -27,13 +23,10 @@ export default function Edit( { attributes, setAttributes, clientId } ) {
 		className: 'decoupled-tabs-trigger-editor',
 	} );
 
-	const innerBlocksProps = useInnerBlocksProps(
-		{ className: 'decoupled-tabs-trigger-content' },
-		{
-			templateLock: false,
-			renderAppender: InnerBlocks.ButtonBlockAppender,
-		}
-	);
+	const innerBlocksProps = useInnerBlocksProps( blockProps, {
+		templateLock: false,
+		renderAppender: InnerBlocks.ButtonBlockAppender,
+	} );
 
 	// Generate a unique ID if not set
 	if ( ! triggerId ) {
@@ -81,50 +74,8 @@ export default function Edit( { attributes, setAttributes, clientId } ) {
 						}
 					/>
 				</PanelBody>
-				<PanelBody
-					title={ __( 'Custom CSS', 'decoupled-tabs' ) }
-					initialOpen={ false }
-				>
-					<TextareaControl
-						label={ __( 'Default Styles', 'decoupled-tabs' ) }
-						help={ __(
-							'CSS properties for default state (e.g., background: #fff; padding: 10px;)',
-							'decoupled-tabs'
-						) }
-						value={ cssDefault }
-						onChange={ ( value ) =>
-							setAttributes( { cssDefault: value } )
-						}
-						rows={ 4 }
-					/>
-					<TextareaControl
-						label={ __( 'Hover Styles', 'decoupled-tabs' ) }
-						help={ __(
-							'CSS properties applied on hover',
-							'decoupled-tabs'
-						) }
-						value={ cssHover }
-						onChange={ ( value ) =>
-							setAttributes( { cssHover: value } )
-						}
-						rows={ 4 }
-					/>
-					<TextareaControl
-						label={ __( 'Active Tab Styles', 'decoupled-tabs' ) }
-						help={ __(
-							"CSS properties when this trigger's tab is active",
-							'decoupled-tabs'
-						) }
-						value={ cssActive }
-						onChange={ ( value ) =>
-							setAttributes( { cssActive: value } )
-						}
-						rows={ 4 }
-					/>
-				</PanelBody>
 			</InspectorControls>
-			<div { ...blockProps }>
-				<div { ...innerBlocksProps } />
+			<div { ...innerBlocksProps }>
 				{ ! tabTarget && (
 					<div className="decoupled-tabs-trigger-notice">
 						{ __(

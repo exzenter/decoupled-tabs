@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GSAP Error Handling Test - Decoupled Tabs</title>
+    <link rel="stylesheet" href="src/frontend/tabs.css">
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .test-section { margin: 30px 0; padding: 20px; border: 1px solid #ccc; }
+        h2 { color: #333; }
+        .decoupled-tabs-trigger { 
+            padding: 10px 20px; 
+            margin: 5px; 
+            cursor: pointer; 
+            border: 1px solid #ddd;
+            display: inline-block;
+        }
+        .decoupled-tabs-trigger.is-active { background: #007cba; color: white; }
+        .decoupled-tabs-content { padding: 20px; border: 1px solid #ddd; margin: 10px 0; }
+        .decoupled-tabs-content:not(.is-active) { display: none; }
+    </style>
+</head>
+<body>
+    <h1>GSAP Error Handling Test Cases</h1>
+    <p>Open the browser console to see error handling messages.</p>
+    <p><strong>Note:</strong> GSAP is intentionally NOT loaded to test fallback behavior.</p>
+
+    <!-- Test 1: Empty Tab Content -->
+    <div class="test-section">
+        <h2>Test 1: Empty Tab Content (should fall back to standard switch)</h2>
+        <div data-tab-target="empty1" data-trigger-id="trigger-empty1" data-tab-area="area-empty">Tab 1</div>
+        <div data-tab-target="empty2" data-trigger-id="trigger-empty2" data-tab-area="area-empty">Tab 2 (Empty)</div>
+        
+        <div class="decoupled-tabs-area" 
+             data-tab-area-id="area-empty"
+             data-gsap-enabled="true"
+             data-gsap-shuffle-iterations="2"
+             data-gsap-char-duration="0.02"
+             data-gsap-stagger-amount="0.25"
+             data-gsap-stagger-delay="0.03"
+             data-gsap-on-enter-duration="0.02">
+            <div class="decoupled-tabs-content is-active" data-tab-id="empty1" id="tab-panel-empty1">
+                This tab has content
+            </div>
+            <div class="decoupled-tabs-content" data-tab-id="empty2" id="tab-panel-empty2">
+                <!-- Empty content -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Test 2: Whitespace-only Tab Content -->
+    <div class="test-section">
+        <h2>Test 2: Whitespace-only Tab Content (should fall back to standard switch)</h2>
+        <div data-tab-target="whitespace1" data-trigger-id="trigger-whitespace1" data-tab-area="area-whitespace">Tab 1</div>
+        <div data-tab-target="whitespace2" data-trigger-id="trigger-whitespace2" data-tab-area="area-whitespace">Tab 2 (Whitespace)</div>
+        
+        <div class="decoupled-tabs-area" 
+             data-tab-area-id="area-whitespace"
+             data-gsap-enabled="true"
+             data-gsap-shuffle-iterations="2"
+             data-gsap-char-duration="0.02"
+             data-gsap-stagger-amount="0.25"
+             data-gsap-stagger-delay="0.03"
+             data-gsap-on-enter-duration="0.02">
+            <div class="decoupled-tabs-content is-active" data-tab-id="whitespace1" id="tab-panel-whitespace1">
+                This tab has content
+            </div>
+            <div class="decoupled-tabs-content" data-tab-id="whitespace2" id="tab-panel-whitespace2">
+                   
+            </div>
+        </div>
+    </div>
+
+    <!-- Test 3: GSAP Not Available -->
+    <div class="test-section">
+        <h2>Test 3: GSAP Not Available (should fall back to standard switch)</h2>
+        <div data-tab-target="nogsap1" data-trigger-id="trigger-nogsap1" data-tab-area="area-nogsap">Tab 1</div>
+        <div data-tab-target="nogsap2" data-trigger-id="trigger-nogsap2" data-tab-area="area-nogsap">Tab 2</div>
+        
+        <div class="decoupled-tabs-area" 
+             data-tab-area-id="area-nogsap"
+             data-gsap-enabled="true"
+             data-gsap-shuffle-iterations="2"
+             data-gsap-char-duration="0.02"
+             data-gsap-stagger-amount="0.25"
+             data-gsap-stagger-delay="0.03"
+             data-gsap-on-enter-duration="0.02">
+            <div class="decoupled-tabs-content is-active" data-tab-id="nogsap1" id="tab-panel-nogsap1">
+                Content for Tab 1 - GSAP is not loaded, so this should use standard tab switching
+            </div>
+            <div class="decoupled-tabs-content" data-tab-id="nogsap2" id="tab-panel-nogsap2">
+                Content for Tab 2 - This should appear instantly without animation
+            </div>
+        </div>
+    </div>
+
+    <!-- Test 4: Normal Tab System (GSAP disabled) -->
+    <div class="test-section">
+        <h2>Test 4: Normal Tab System (GSAP disabled, should work normally)</h2>
+        <div data-tab-target="normal1" data-trigger-id="trigger-normal1" data-tab-area="area-normal">Tab 1</div>
+        <div data-tab-target="normal2" data-trigger-id="trigger-normal2" data-tab-area="area-normal">Tab 2</div>
+        
+        <div class="decoupled-tabs-area" 
+             data-tab-area-id="area-normal"
+             data-gsap-enabled="false">
+            <div class="decoupled-tabs-content is-active" data-tab-id="normal1" id="tab-panel-normal1">
+                Normal Content 1 - No GSAP animations
+            </div>
+            <div class="decoupled-tabs-content" data-tab-id="normal2" id="tab-panel-normal2">
+                Normal Content 2 - Standard tab switching
+            </div>
+        </div>
+    </div>
+
+    <script src="build/frontend/tabs.js"></script>
+</body>
+</html>

@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GSAP Integration Test - Decoupled Tabs</title>
+    <link rel="stylesheet" href="src/frontend/tabs.css">
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .test-section { margin: 30px 0; padding: 20px; border: 1px solid #ccc; }
+        h2 { color: #333; }
+        .decoupled-tabs-trigger { 
+            padding: 10px 20px; 
+            margin: 5px; 
+            cursor: pointer; 
+            border: 1px solid #ddd;
+            display: inline-block;
+        }
+        .decoupled-tabs-trigger.is-active { background: #007cba; color: white; }
+        .decoupled-tabs-content { padding: 20px; border: 1px solid #ddd; margin: 10px 0; }
+        .decoupled-tabs-content:not(.is-active) { display: none; }
+        .status { padding: 10px; margin: 10px 0; background: #f0f0f0; }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+    </style>
+</head>
+<body>
+    <h1>GSAP Integration Test Cases</h1>
+    <p>This page tests the integration of GSAP animations with the tab switching logic.</p>
+    <div id="test-status" class="status">Loading tests...</div>
+
+    <!-- Test 1: GSAP Enabled Only -->
+    <div class="test-section">
+        <h2>Test 1: GSAP Enabled Only (no smooth height)</h2>
+        <div class="decoupled-tabs-trigger" data-tab-target="gsap1" data-trigger-id="trigger-gsap1" data-tab-area="area-gsap-only">Tab 1</div>
+        <div class="decoupled-tabs-trigger" data-tab-target="gsap2" data-trigger-id="trigger-gsap2" data-tab-area="area-gsap-only">Tab 2</div>
+        
+        <div class="decoupled-tabs-area" 
+             data-tab-area-id="area-gsap-only"
+             data-gsap-enabled="true"
+             data-gsap-shuffle-iterations="2"
+             data-gsap-char-duration="0.02"
+             data-gsap-stagger-amount="0.25"
+             data-gsap-stagger-delay="0.03"
+             data-gsap-on-enter-duration="0.02"
+             data-smooth-height="false">
+            <div class="decoupled-tabs-content is-active" data-tab-id="gsap1" id="tab-panel-gsap1">
+                This is Tab 1 content with GSAP animations enabled. The text should animate with a shuffle effect when switching tabs.
+            </div>
+            <div class="decoupled-tabs-content" data-tab-id="gsap2" id="tab-panel-gsap2">
+                This is Tab 2 content. It has different length text to test the animation behavior. Watch the characters shuffle!
+            </div>
+        </div>
+    </div>
+
+    <!-- Test 2: GSAP + Smooth Height -->
+    <div class="test-section">
+        <h2>Test 2: GSAP + Smooth Height (both enabled)</h2>
+        <div class="decoupled-tabs-trigger" data-tab-target="both1" data-trigger-id="trigger-both1" data-tab-area="area-both">Tab 1 (Short)</div>
+        <div class="decoupled-tabs-trigger" data-tab-target="both2" data-trigger-id="trigger-both2" data-tab-area="area-both">Tab 2 (Long)</div>
+        
+        <div class="decoupled-tabs-area" 
+             data-tab-area-id="area-both"
+             data-gsap-enabled="true"
+             data-gsap-shuffle-iterations="2"
+             data-gsap-char-duration="0.02"
+             data-gsap-stagger-amount="0.25"
+             data-gsap-stagger-delay="0.03"
+             data-gsap-on-enter-duration="0.02"
+             data-smooth-height="true"
+             data-transition-duration="300">
+            <div class="decoupled-tabs-content is-active" data-tab-id="both1" id="tab-panel-both1">
+                Short content in Tab 1.
+            </div>
+            <div class="decoupled-tabs-content" data-tab-id="both2" id="tab-panel-both2">
+                This is Tab 2 with much longer content to demonstrate smooth height transitions working alongside GSAP animations.
+                <br><br>
+                The container should smoothly animate its height after the GSAP text animations complete.
+                <br><br>
+                This tests Requirement 6.5: compatibility with smooth height transitions.
+            </div>
+        </div>
+    </div>
+
+    <!-- Test 3: Smooth Height Only (GSAP disabled) -->
+    <div class="test-section">
+        <h2>Test 3: Smooth Height Only (GSAP disabled)</h2>
+        <div class="decoupled-tabs-trigger" data-tab-target="smooth1" data-trigger-id="trigger-smooth1" data-tab-area="area-smooth">Tab 1</div>
+        <div class="decoupled-tabs-trigger" data-tab-target="smooth2" data-trigger-id="trigger-smooth2" data-tab-area="area-smooth">Tab 2</div>
+        
+        <div class="decoupled-tabs-area" 
+             data-tab-area-id="area-smooth"
+             data-gsap-enabled="false"
+             data-smooth-height="true"
+             data-transition-duration="300">
+            <div class="decoupled-tabs-content is-active" data-tab-id="smooth1" id="tab-panel-smooth1">
+                Short content.
+            </div>
+            <div class="decoupled-tabs-content" data-tab-id="smooth2" id="tab-panel-smooth2">
+                Longer content to test smooth height transitions without GSAP animations.
+                <br><br>
+                The height should animate smoothly.
+            </div>
+        </div>
+    </div>
+
+    <!-- Test 4: Both Disabled (instant switch) -->
+    <div class="test-section">
+        <h2>Test 4: Both Disabled (instant switch)</h2>
+        <div class="decoupled-tabs-trigger" data-tab-target="instant1" data-trigger-id="trigger-instant1" data-tab-area="area-instant">Tab 1</div>
+        <div class="decoupled-tabs-trigger" data-tab-target="instant2" data-trigger-id="trigger-instant2" data-tab-area="area-instant">Tab 2</div>
+        
+        <div class="decoupled-tabs-area" 
+             data-tab-area-id="area-instant"
+             data-gsap-enabled="false"
+             data-smooth-height="false">
+            <div class="decoupled-tabs-content is-active" data-tab-id="instant1" id="tab-panel-instant1">
+                Content 1 - instant switch
+            </div>
+            <div class="decoupled-tabs-content" data-tab-id="instant2" id="tab-panel-instant2">
+                Content 2 - should appear instantly without any animations
+            </div>
+        </div>
+    </div>
+
+    <!-- Load GSAP from CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/SplitText.min.js"></script>
+    
+    <!-- Load tabs script -->
+    <script src="build/frontend/tabs.js"></script>
+
+    <script>
+        // Test verification script
+        setTimeout(() => {
+            const statusDiv = document.getElementById('test-status');
+            let allPassed = true;
+            let messages = [];
+
+            // Check if GSAP is loaded
+            if (typeof gsap !== 'undefined' && typeof SplitText !== 'undefined') {
+                messages.push('✓ GSAP and SplitText loaded successfully');
+            } else {
+                messages.push('✗ GSAP or SplitText not loaded');
+                allPassed = false;
+            }
+
+            // Check if DecoupledTabs initialized
+            const tabAreas = document.querySelectorAll('.decoupled-tabs-area');
+            if (tabAreas.length === 4) {
+                messages.push('✓ All 4 tab areas found');
+            } else {
+                messages.push(`✗ Expected 4 tab areas, found ${tabAreas.length}`);
+                allPassed = false;
+            }
+
+            // Check if triggers are working
+            const triggers = document.querySelectorAll('.decoupled-tabs-trigger');
+            if (triggers.length === 8) {
+                messages.push('✓ All 8 triggers found');
+            } else {
+                messages.push(`✗ Expected 8 triggers, found ${triggers.length}`);
+                allPassed = false;
+            }
+
+            statusDiv.className = allPassed ? 'status success' : 'status error';
+            statusDiv.innerHTML = messages.join('<br>');
+        }, 1000);
+    </script>
+</body>
+</html>

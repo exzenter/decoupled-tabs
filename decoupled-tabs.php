@@ -43,6 +43,7 @@ function decoupled_tabs_enqueue_frontend_scripts() {
 	if ( has_block( 'decoupled-tabs/tab-area' ) ) {
 		$asset_file = include( DECOUPLED_TABS_PATH . 'build/frontend/tabs.asset.php' );
 		
+		// Enqueue frontend script (GSAP is bundled within)
 		wp_enqueue_script(
 			'decoupled-tabs-frontend',
 			DECOUPLED_TABS_URL . 'build/frontend/tabs.js',

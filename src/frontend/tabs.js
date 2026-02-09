@@ -3,6 +3,16 @@
  * Handles tab switching with smooth height transitions
  */
 
+import { gsap } from 'gsap';
+import { SplitText } from 'gsap/SplitText';
+
+// Register GSAP plugins
+gsap.registerPlugin( SplitText );
+
+// Make GSAP available globally for the class
+window.gsap = gsap;
+window.SplitText = SplitText;
+
 ( function () {
 	'use strict';
 
@@ -398,6 +408,51 @@
 				area.querySelectorAll( '.decoupled-tabs-content' )
 			);
 
+			// Read GSAP configuration from data attributes
+			// Note: We don't check GSAP availability here - we'll check at animation time
+			// This allows GSAP to load asynchronously without blocking initialization
+			const gsapEnabled = area.dataset.gsapEnabled === 'true';
+
+			// Parse and validate GSAP configuration parameters
+			// Clamp values to valid ranges with fallback to defaults
+			const gsapConfig = {
+				shuffleIterations: Math.max(
+					1,
+					Math.min(
+						10,
+						parseInt( area.dataset.gsapShuffleIterations, 10 ) || 2
+					)
+				),
+				charDuration: Math.max(
+					0.01,
+					Math.min(
+						1,
+						parseFloat( area.dataset.gsapCharDuration ) || 0.02
+					)
+				),
+				staggerAmount: Math.max(
+					0,
+					Math.min(
+						2,
+						parseFloat( area.dataset.gsapStaggerAmount ) || 0.25
+					)
+				),
+				staggerDelay: Math.max(
+					0,
+					Math.min(
+						0.5,
+						parseFloat( area.dataset.gsapStaggerDelay ) || 0.03
+					)
+				),
+				onEnterDuration: Math.max(
+					0.01,
+					Math.min(
+						1,
+						parseFloat( area.dataset.gsapOnEnterDuration ) || 0.02
+					)
+				),
+			};
+
 			this.tabAreas.set( areaId, {
 				element: area,
 				tabs,
@@ -405,6 +460,8 @@
 				transitionDuration,
 				currentTab: null,
 				isTransitioning: false,
+				gsapEnabled,
+				gsapConfig,
 			} );
 
 			// Set initial active tab
@@ -594,11 +651,24 @@
 				currentTab,
 				smoothHeight,
 				transitionDuration,
+				gsapEnabled,
 			} = tabAreaData;
 			const duration = immediate ? 0 : transitionDuration;
 
 			if ( currentTab === tab ) {
 				return; // Already active
+			}
+
+			// Handle rapid tab switching: kill any in-progress animations
+			if ( tabAreaData.isTransitioning && gsapEnabled ) {
+				// Kill animations on all tabs in this area to prevent queue buildup
+				tabs.forEach( ( t ) => {
+					if ( t.currentTween ) {
+						t.currentTween.kill();
+						t.currentTween = null;
+					}
+					this.resetElement( t );
+				} );
 			}
 
 			// Mark as transitioning
@@ -611,7 +681,32 @@
 			// Update ARIA states on triggers when tab changes
 			this.updateTriggerStates( activeTabId, areaId );
 
-			if ( smoothHeight && ! immediate && currentTab ) {
+			// Check if GSAP animations should be executed
+			// Verify GSAP availability at animation time (not initialization time)
+			const gsapAvailable =
+				typeof gsap !== 'undefined' &&
+				typeof SplitText !== 'undefined';
+
+			if ( gsapEnabled && ! gsapAvailable && ! immediate ) {
+				// Log warning only once per tab area
+				if ( ! tabAreaData.gsapWarningLogged ) {
+					// eslint-disable-next-line no-console
+					console.warn(
+						'Decoupled Tabs: GSAP or SplitText not available, falling back to standard transitions'
+					);
+					tabAreaData.gsapWarningLogged = true;
+				}
+			}
+
+			if (
+				gsapEnabled &&
+				gsapAvailable &&
+				! immediate &&
+				currentTab
+			) {
+				// Execute GSAP transition
+				this.executeGSAPTransition( currentTab, tab, tabAreaData );
+			} else if ( smoothHeight && ! immediate && currentTab ) {
 				// Smooth height transition
 				this.animateHeightTransition(
 					element,
@@ -738,6 +833,334 @@
 			const hash = window.location.hash.slice( 1 );
 			if ( hash ) {
 				this.switchToTab( hash );
+			}
+		}
+
+		/**
+		 * Execute GSAP animation sequence for tab transition
+		 * Orchestrates onEnter (fade out) and onLeave (shuffle reveal) animations
+		 * @param {HTMLElement} fromTab - The outgoing tab content element
+		 * @param {HTMLElement} toTab - The incoming tab content element
+		 * @param {Object} tabAreaData - Tab area configuration data
+		 */
+		executeGSAPTransition( fromTab, toTab, tabAreaData ) {
+			const { gsapConfig, tabs } = tabAreaData;
+
+			// Ensure clean state before starting new animations
+			// Kill any existing animations and reset both tabs
+			if ( fromTab.currentTween ) {
+				fromTab.currentTween.kill();
+				fromTab.currentTween = null;
+			}
+			if ( toTab.currentTween ) {
+				toTab.currentTween.kill();
+				toTab.currentTween = null;
+			}
+			this.resetElement( fromTab );
+			this.resetElement( toTab );
+
+			// Keep the incoming tab hidden (display: none) until animation starts
+			// This prevents layout shift during the fade-out of the old tab
+			toTab.setAttribute( 'tabindex', '0' );
+
+			// Execute onEnter animation on outgoing tab
+			const onEnterSuccess = this.gsapOnEnter( fromTab, gsapConfig, () => {
+				// onEnter complete, hide the outgoing tab
+				fromTab.classList.remove( 'is-active' );
+				fromTab.setAttribute( 'tabindex', '-1' );
+
+				// Now make the incoming tab visible and execute onLeave animation
+				toTab.classList.add( 'is-active' );
+				
+				// Now execute onLeave animation on incoming tab
+				const onLeaveSuccess = this.gsapOnLeave( toTab, gsapConfig, () => {
+					// Both animations complete, now complete the tab switch
+					this.completeTabSwitch( fromTab, toTab, tabs, tabAreaData );
+				} );
+
+				// If onLeave failed, fall back to standard tab switch
+				if ( ! onLeaveSuccess ) {
+					this.standardTabSwitch( fromTab, toTab, tabs, tabAreaData );
+				}
+			} );
+
+			// If onEnter failed, fall back to standard tab switch immediately
+			if ( ! onEnterSuccess ) {
+				this.standardTabSwitch( fromTab, toTab, tabs, tabAreaData );
+			}
+		}
+
+		/**
+		 * Complete the tab switch by updating visibility classes
+		 * Optionally applies smooth height transition if enabled
+		 * @param {HTMLElement} fromTab - The outgoing tab content element
+		 * @param {HTMLElement} toTab - The incoming tab content element
+		 * @param {Array} tabs - All tab content elements in the area
+		 * @param {Object} tabAreaData - Tab area configuration data
+		 */
+		completeTabSwitch( fromTab, toTab, tabs, tabAreaData ) {
+			const { smoothHeight, transitionDuration, element } = tabAreaData;
+
+			// Check if smooth height transition should be applied
+			if ( smoothHeight ) {
+				// Apply smooth height transition along with tab switch
+				this.animateHeightTransition(
+					element,
+					fromTab,
+					toTab,
+					transitionDuration,
+					tabs,
+					tabAreaData
+				);
+			} else {
+				// Instant switch - rely on CSS classes for visibility
+				tabs.forEach( ( t ) => {
+					if ( t !== toTab ) {
+						t.classList.remove( 'is-active' );
+						t.setAttribute( 'tabindex', '-1' );
+					}
+				} );
+
+				toTab.classList.add( 'is-active' );
+				toTab.setAttribute( 'tabindex', '0' );
+
+				// Update current tab reference
+				tabAreaData.currentTab = toTab;
+
+				// Mark transition as complete
+				tabAreaData.isTransitioning = false;
+			}
+		}
+
+		/**
+		 * Perform standard tab switch without animations
+		 * Used as fallback when GSAP animations fail or are unavailable
+		 * @param {HTMLElement} fromTab - The outgoing tab content element
+		 * @param {HTMLElement} toTab - The incoming tab content element
+		 * @param {Array} tabs - All tab content elements in the area
+		 * @param {Object} tabAreaData - Tab area configuration data
+		 */
+		standardTabSwitch( fromTab, toTab, tabs, tabAreaData ) {
+			// Clean up any partial animation state
+			if ( fromTab ) {
+				this.resetElement( fromTab );
+			}
+			if ( toTab ) {
+				this.resetElement( toTab );
+			}
+
+			// Complete the tab switch immediately
+			this.completeTabSwitch( fromTab, toTab, tabs, tabAreaData );
+		}
+
+		/**
+		 * Generate a random letter for shuffle animation
+		 * @return {string} A random uppercase or lowercase letter
+		 */
+		getRandomChar() {
+			const letters =
+				'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
+			return letters.charAt(
+				Math.floor( Math.random() * letters.length )
+			);
+		}
+
+		/**
+		 * Reset element animation state and clean up GSAP properties
+		 * @param {HTMLElement} target - The element to reset
+		 */
+		resetElement( target ) {
+			// Clean up text splitter if it exists
+			if ( target.textSplitter ) {
+				target.textSplitter.revert();
+				target.textSplitter = null;
+			}
+
+			// Clear all GSAP properties if GSAP is available
+			if ( typeof gsap !== 'undefined' ) {
+				gsap.set( target, { clearProps: 'all' } );
+			}
+		}
+
+		/**
+		 * Execute onEnter animation (fade out) on outgoing tab content
+		 * Splits text into characters and animates them to opacity 0 with stagger from end
+		 * @param {HTMLElement} target - The tab content element to animate
+		 * @param {Object} config - GSAP animation configuration
+		 * @param {Function} onComplete - Callback to execute when animation completes
+		 * @return {boolean} True if animation started successfully, false if it failed
+		 */
+		gsapOnEnter( target, config, onComplete ) {
+			// Check for valid tab content before animating
+			if ( ! target || ! target.textContent || ! target.textContent.trim() ) {
+				// eslint-disable-next-line no-console
+				console.warn(
+					'Decoupled Tabs: Invalid tab content for GSAP animation, falling back to standard tab switch'
+				);
+				return false;
+			}
+
+			// Kill existing animation if present
+			if ( target.currentTween ) {
+				target.currentTween.kill();
+			}
+
+			// Reset element state
+			this.resetElement( target );
+
+			try {
+				// Wrap text splitting in try-catch
+				target.textSplitter = new SplitText( target, { type: 'chars' } );
+
+				// Animate characters to opacity 0 with stagger from end
+				target.currentTween = gsap.to( target.textSplitter.chars, {
+					duration: config.onEnterDuration,
+					ease: 'none',
+					autoAlpha: 0,
+					stagger: {
+						amount: config.staggerAmount,
+						from: 'end',
+					},
+					onComplete: () => {
+						// Clear animation reference
+						target.currentTween = null;
+						// Call completion callback
+						onComplete();
+					},
+				} );
+
+				return true;
+			} catch ( error ) {
+				// Log errors for debugging
+				// eslint-disable-next-line no-console
+				console.error( 'Decoupled Tabs: Text splitting failed, falling back to standard tab switch', error );
+				// Clean up partial animation state
+				this.resetElement( target );
+				return false;
+			}
+		}
+
+		/**
+		 * Execute onLeave animation (shuffle and reveal) on incoming tab content
+		 * Shuffles characters through random letters before revealing original content
+		 * @param {HTMLElement} target - The tab content element to animate
+		 * @param {Object} config - GSAP animation configuration
+		 * @param {Function} onComplete - Callback to execute when animation completes
+		 * @return {boolean} True if animation started successfully, false if it failed
+		 */
+		gsapOnLeave( target, config, onComplete ) {
+			// eslint-disable-next-line no-console
+			console.log( '[gsapOnLeave] Starting animation', { target, config } );
+
+			// Check for valid tab content before animating
+			if ( ! target || ! target.textContent || ! target.textContent.trim() ) {
+				// eslint-disable-next-line no-console
+				console.warn(
+					'Decoupled Tabs: Invalid tab content for GSAP animation, falling back to standard tab switch'
+				);
+				return false;
+			}
+
+			// Kill existing animation if present
+			if ( target.currentTween ) {
+				// eslint-disable-next-line no-console
+				console.log( '[gsapOnLeave] Killing existing tween' );
+				target.currentTween.kill();
+			}
+
+			// Reset element state before starting new animation
+			this.resetElement( target );
+
+			try {
+				// Create new SplitText instance for the incoming tab
+				// eslint-disable-next-line no-console
+				console.log( '[gsapOnLeave] Creating SplitText for target' );
+				target.textSplitter = new SplitText( target, { type: 'chars' } );
+				
+				// Get the character array from the text splitter
+				const chars = target.textSplitter.chars;
+				// eslint-disable-next-line no-console
+				console.log( '[gsapOnLeave] SplitText created, chars:', chars.length );
+
+				// Validate that we have characters to animate
+				if ( ! chars || chars.length === 0 ) {
+					// eslint-disable-next-line no-console
+					console.warn(
+						'Decoupled Tabs: No characters available for animation, falling back to standard tab switch'
+					);
+					return false;
+				}
+
+				// Set all characters to opacity 0 initially
+				gsap.set( chars, { autoAlpha: 0 } );
+
+				// Create GSAP timeline for shuffle effect
+				const tl = gsap.timeline( {
+					onComplete: () => {
+						// eslint-disable-next-line no-console
+						console.log( '[gsapOnLeave] Timeline complete' );
+						// Clear animation reference
+						target.currentTween = null;
+						// Call completion callback
+						onComplete();
+					},
+				} );
+
+				// eslint-disable-next-line no-console
+				console.log( '[gsapOnLeave] Building timeline with config:', config );
+
+				// Animate each character with shuffle effect
+				chars.forEach( ( char, index ) => {
+					// Store the original character content
+					const originalChar = char.innerHTML;
+
+					// Calculate the start time for this character's animation sequence
+					const charStartTime = index * config.staggerDelay;
+
+					// Create shuffle iterations - replace with random letters N times
+					for ( let i = 0; i < config.shuffleIterations; i++ ) {
+						tl.to(
+							char,
+							{
+								duration: config.charDuration,
+								textContent: this.getRandomChar(),
+								autoAlpha: 1,
+								ease: 'none',
+							},
+							charStartTime + i * config.charDuration
+						);
+					}
+
+					// Restore original character content and animate to opacity 1
+					tl.to(
+						char,
+						{
+							duration: config.charDuration,
+							textContent: originalChar,
+							autoAlpha: 1,
+							ease: 'none',
+						},
+						charStartTime + config.shuffleIterations * config.charDuration
+					);
+				} );
+
+				// eslint-disable-next-line no-console
+				console.log( '[gsapOnLeave] Timeline built, duration:', tl.duration() );
+
+				// Store timeline reference on element
+				target.currentTween = tl;
+
+				return true;
+			} catch ( error ) {
+				// Log errors for debugging
+				// eslint-disable-next-line no-console
+				console.error(
+					'Decoupled Tabs: Animation creation failed, falling back to standard tab switch',
+					error
+				);
+				// Clean up partial animation state
+				this.resetElement( target );
+				return false;
 			}
 		}
 	}

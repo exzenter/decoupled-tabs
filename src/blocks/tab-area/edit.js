@@ -9,6 +9,7 @@ import {
 	TextControl,
 	ToggleControl,
 	RangeControl,
+	__experimentalNumberControl as NumberControl,
 } from '@wordpress/components';
 
 const ALLOWED_BLOCKS = [ 'decoupled-tabs/tab-content' ];
@@ -19,6 +20,12 @@ export default function Edit( { attributes, setAttributes, clientId } ) {
 		smoothHeightTransition,
 		transitionDuration,
 		tabAreaId,
+		gsapEnabled,
+		gsapShuffleIterations,
+		gsapCharDuration,
+		gsapStaggerAmount,
+		gsapStaggerDelay,
+		gsapOnEnterDuration,
 	} = attributes;
 
 	const blockProps = useBlockProps( {
@@ -87,6 +94,96 @@ export default function Edit( { attributes, setAttributes, clientId } ) {
 							max={ 2000 }
 							step={ 50 }
 						/>
+					) }
+				</PanelBody>
+				<PanelBody
+					title={ __( 'GSAP Animations', 'decoupled-tabs' ) }
+					initialOpen={ false }
+				>
+					<ToggleControl
+						label={ __( 'Enable GSAP Animations', 'decoupled-tabs' ) }
+						help={ __(
+							'Enable character-based animations with shuffle effects during tab transitions.',
+							'decoupled-tabs'
+						) }
+						checked={ gsapEnabled }
+						onChange={ ( value ) =>
+							setAttributes( { gsapEnabled: value } )
+						}
+					/>
+					{ gsapEnabled && (
+						<>
+							<RangeControl
+								label={ __( 'Shuffle Iterations', 'decoupled-tabs' ) }
+								help={ __(
+									'Number of random character iterations before revealing final content.',
+									'decoupled-tabs'
+								) }
+								value={ gsapShuffleIterations }
+								onChange={ ( value ) =>
+									setAttributes( { gsapShuffleIterations: value } )
+								}
+								min={ 1 }
+								max={ 10 }
+								step={ 1 }
+							/>
+							<NumberControl
+								label={ __( 'Character Duration (s)', 'decoupled-tabs' ) }
+								help={ __(
+									'Duration per character animation in seconds.',
+									'decoupled-tabs'
+								) }
+								value={ gsapCharDuration }
+								onChange={ ( value ) =>
+									setAttributes( { gsapCharDuration: parseFloat( value ) } )
+								}
+								min={ 0.01 }
+								max={ 1 }
+								step={ 0.01 }
+							/>
+							<NumberControl
+								label={ __( 'Stagger Amount (s)', 'decoupled-tabs' ) }
+								help={ __(
+									'Total stagger duration across all characters in seconds.',
+									'decoupled-tabs'
+								) }
+								value={ gsapStaggerAmount }
+								onChange={ ( value ) =>
+									setAttributes( { gsapStaggerAmount: parseFloat( value ) } )
+								}
+								min={ 0 }
+								max={ 2 }
+								step={ 0.05 }
+							/>
+							<NumberControl
+								label={ __( 'Stagger Delay (s)', 'decoupled-tabs' ) }
+								help={ __(
+									'Delay between character animations in seconds.',
+									'decoupled-tabs'
+								) }
+								value={ gsapStaggerDelay }
+								onChange={ ( value ) =>
+									setAttributes( { gsapStaggerDelay: parseFloat( value ) } )
+								}
+								min={ 0 }
+								max={ 0.5 }
+								step={ 0.01 }
+							/>
+							<NumberControl
+								label={ __( 'OnEnter Duration (s)', 'decoupled-tabs' ) }
+								help={ __(
+									'Duration for fade-out animation in seconds.',
+									'decoupled-tabs'
+								) }
+								value={ gsapOnEnterDuration }
+								onChange={ ( value ) =>
+									setAttributes( { gsapOnEnterDuration: parseFloat( value ) } )
+								}
+								min={ 0.01 }
+								max={ 1 }
+								step={ 0.01 }
+							/>
+						</>
 					) }
 				</PanelBody>
 			</InspectorControls>
