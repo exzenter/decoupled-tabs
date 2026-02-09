@@ -4,14 +4,23 @@
     position: relative;
 }
 
-/* Base tab content state - hidden */
+/* Base tab content state - visually hidden but accessible to screen readers and crawlers */
 .decoupled-tabs-content {
-    display: none;
+    position: absolute;
+    left: -10000px;
+    top: auto;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
 }
 
-/* Active tab state */
+/* Active tab state - visible and in normal flow */
 .decoupled-tabs-content.is-active {
-    display: block;
+    position: static;
+    left: auto;
+    width: auto;
+    height: auto;
+    overflow: visible;
 }
 
 /* =====================
@@ -23,4 +32,19 @@
 
 [data-tab-target].is-active {
     /* Users can style this as desired */
+}
+
+/* =====================
+   Focus Indicators
+   ===================== */
+/* Focus indicator for keyboard navigation */
+[data-tab-target]:focus {
+    outline: 2px solid currentColor;
+    outline-offset: 2px;
+}
+
+/* Ensure focus is visible even with custom styles */
+[data-tab-target]:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 2px;
 }

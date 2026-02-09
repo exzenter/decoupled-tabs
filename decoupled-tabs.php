@@ -50,6 +50,14 @@ function decoupled_tabs_enqueue_frontend_scripts() {
 			$asset_file['version'] ?? DECOUPLED_TABS_VERSION,
 			true
 		);
+		
+		// Enqueue frontend CSS
+		wp_enqueue_style(
+			'decoupled-tabs-frontend-css',
+			DECOUPLED_TABS_URL . 'src/frontend/tabs.css',
+			array(),
+			DECOUPLED_TABS_VERSION
+		);
 	}
 }
 add_action( 'wp_enqueue_scripts', 'decoupled_tabs_enqueue_frontend_scripts' );

@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Error Handling Test - Decoupled Tabs</title>
+    <link rel="stylesheet" href="src/frontend/tabs.css">
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .test-section { margin: 30px 0; padding: 20px; border: 1px solid #ccc; }
+        h2 { color: #333; }
+        .decoupled-tabs-trigger { 
+            padding: 10px 20px; 
+            margin: 5px; 
+            cursor: pointer; 
+            border: 1px solid #ddd;
+            display: inline-block;
+        }
+        .decoupled-tabs-trigger.is-active { background: #007cba; color: white; }
+        .decoupled-tabs-trigger.disabled { opacity: 0.5; cursor: not-allowed; }
+        .decoupled-tabs-content { padding: 20px; border: 1px solid #ddd; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <h1>Error Handling Test Cases</h1>
+    <p>Open the browser console to see error handling messages.</p>
+
+    <!-- Test 1: Missing IDs -->
+    <div class="test-section">
+        <h2>Test 1: Missing IDs (should auto-generate)</h2>
+        <div data-tab-target="test1">Trigger without ID</div>
+        <div class="decoupled-tabs-area" data-tab-area-id="area1">
+            <div class="decoupled-tabs-content is-active">Content without ID</div>
+        </div>
+    </div>
+
+    <!-- Test 2: Orphaned Trigger -->
+    <div class="test-section">
+        <h2>Test 2: Orphaned Trigger (should be disabled)</h2>
+        <div data-tab-target="nonexistent" data-trigger-id="orphan-trigger">
+            Orphaned Trigger (no matching content)
+        </div>
+    </div>
+
+    <!-- Test 3: Orphaned Content -->
+    <div class="test-section">
+        <h2>Test 3: Orphaned Content (should have tabindex=-1)</h2>
+        <div class="decoupled-tabs-area" data-tab-area-id="area2">
+            <div class="decoupled-tabs-content is-active" data-tab-id="orphan-content">
+                Orphaned Content (no trigger references this)
+            </div>
+        </div>
+    </div>
+
+    <!-- Test 4: Multiple Active Tabs -->
+    <div class="test-section">
+        <h2>Test 4: Multiple Active Tabs (should resolve to first)</h2>
+        <div data-tab-target="multi1" data-trigger-id="trigger-multi1" data-tab-area="area3">Tab 1</div>
+        <div data-tab-target="multi2" data-trigger-id="trigger-multi2" data-tab-area="area3">Tab 2</div>
+        <div data-tab-target="multi3" data-trigger-id="trigger-multi3" data-tab-area="area3">Tab 3</div>
+        
+        <div class="decoupled-tabs-area" data-tab-area-id="area3">
+            <div class="decoupled-tabs-content is-active" data-tab-id="multi1">Content 1 (marked active)</div>
+            <div class="decoupled-tabs-content is-active" data-tab-id="multi2">Content 2 (also marked active - conflict!)</div>
+            <div class="decoupled-tabs-content is-active" data-tab-id="multi3">Content 3 (also marked active - conflict!)</div>
+        </div>
+    </div>
+
+    <!-- Test 5: Valid Tab System -->
+    <div class="test-section">
+        <h2>Test 5: Valid Tab System (should work normally)</h2>
+        <div data-tab-target="valid1" data-trigger-id="trigger-valid1" data-tab-area="area4">Valid Tab 1</div>
+        <div data-tab-target="valid2" data-trigger-id="trigger-valid2" data-tab-area="area4">Valid Tab 2</div>
+        
+        <div class="decoupled-tabs-area" data-tab-area-id="area4" data-default-tab="valid1">
+            <div class="decoupled-tabs-content is-active" data-tab-id="valid1" id="tab-panel-valid1">
+                Valid Content 1
+            </div>
+            <div class="decoupled-tabs-content" data-tab-id="valid2" id="tab-panel-valid2">
+                Valid Content 2
+            </div>
+        </div>
+    </div>
+
+    <script src="src/frontend/tabs.js"></script>
+</body>
+</html>
