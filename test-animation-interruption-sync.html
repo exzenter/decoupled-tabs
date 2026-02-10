@@ -1,0 +1,313 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Animation Interruption & Sync Test - Decoupled Tabs</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+
+      .test-section {
+        margin-bottom: 40px;
+        padding: 20px;
+        border: 2px solid #ddd;
+        border-radius: 8px;
+      }
+
+      h2 {
+        margin-top: 0;
+        color: #333;
+      }
+
+      /* Tab Area Styles */
+      .decoupled-tabs-area {
+        border: 1px solid #ccc;
+        padding: 20px;
+        margin: 20px 0;
+        background: #f9f9f9;
+      }
+
+      .decoupled-tabs-content {
+        display: none;
+        padding: 20px;
+        background: white;
+        border: 1px solid #ddd;
+        margin-top: 10px;
+        min-height: 100px;
+      }
+
+      .decoupled-tabs-content.is-active {
+        display: block;
+      }
+
+      /* Trigger Styles */
+      .trigger-group {
+        display: flex;
+        gap: 10px;
+        margin: 20px 0;
+        flex-wrap: wrap;
+      }
+
+      [data-tab-target] {
+        padding: 10px 20px;
+        background: #e0e0e0;
+        border: 2px solid #999;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: all 0.3s;
+      }
+
+      [data-tab-target]:hover {
+        background: #d0d0d0;
+      }
+
+      [data-tab-target].is-active {
+        background: #4caf50;
+        color: white;
+        border-color: #45a049;
+      }
+
+      .info-box {
+        background: #e3f2fd;
+        padding: 15px;
+        border-left: 4px solid #2196f3;
+        margin: 20px 0;
+      }
+
+      .warning-box {
+        background: #fff3cd;
+        padding: 15px;
+        border-left: 4px solid #ffc107;
+        margin: 20px 0;
+      }
+
+      .area-label {
+        font-weight: bold;
+        color: #666;
+        margin-bottom: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Animation Interruption & Multi-Area Sync Test</h1>
+
+    <div class="info-box">
+      <strong>Test Scenario:</strong> This page tests the new animation
+      interruption behavior where clicking rapidly on triggers will immediately
+      interrupt and restart animations, keeping all tab areas in sync.
+      <br /><br />
+      <strong>Expected Behavior:</strong>
+      <ul>
+        <li>
+          Clicking a trigger during an animation should immediately interrupt it
+          and start the new animation
+        </li>
+        <li>
+          All tab areas controlled by the same trigger should stay perfectly in
+          sync
+        </li>
+        <li>No delays or blocking - triggers should be instantly responsive</li>
+      </ul>
+    </div>
+
+    <div class="warning-box">
+      <strong>How to Test:</strong> Click rapidly between the global triggers
+      below. The animations should interrupt and restart immediately without any
+      delay or blocking. All three tab areas should stay perfectly synchronized.
+    </div>
+
+    <!-- Global Triggers (no data-tab-area attribute) -->
+    <div class="test-section">
+      <h2>Global Triggers - Click Rapidly!</h2>
+      <p>
+        Click these triggers rapidly to test animation interruption. All areas
+        should stay in sync:
+      </p>
+      <div class="trigger-group">
+        <div data-tab-target="tab1">Tab 1 - Short Text</div>
+        <div data-tab-target="tab2">Tab 2 - Medium Text</div>
+        <div data-tab-target="tab3">Tab 3 - Long Text</div>
+      </div>
+    </div>
+
+    <!-- Tab Area 1 with GSAP -->
+    <div class="test-section">
+      <h2>Tab Area 1 - With GSAP Animation</h2>
+      <div class="area-label">Area ID: area1 | GSAP Enabled</div>
+
+      <div
+        class="decoupled-tabs-area"
+        data-tab-area-id="area1"
+        data-smooth-height="true"
+        data-transition-duration="300"
+        data-gsap-enabled="true"
+        data-gsap-shuffle-iterations="3"
+        data-gsap-char-duration="0.03"
+        data-gsap-stagger-amount="0.3"
+        data-gsap-stagger-delay="0.02"
+        data-gsap-on-enter-duration="0.02"
+      >
+        <div
+          class="decoupled-tabs-content is-active"
+          data-tab-id="tab1"
+          id="tab-panel-tab1-1"
+        >
+          <h3>Tab 1 Content (Area 1)</h3>
+          <p>Short text for quick animation.</p>
+        </div>
+        <div
+          class="decoupled-tabs-content"
+          data-tab-id="tab2"
+          id="tab-panel-tab2-1"
+        >
+          <h3>Tab 2 Content (Area 1)</h3>
+          <p>
+            This is a medium length text that will take a bit longer to animate
+            with the character shuffle effect.
+          </p>
+        </div>
+        <div
+          class="decoupled-tabs-content"
+          data-tab-id="tab3"
+          id="tab-panel-tab3-1"
+        >
+          <h3>Tab 3 Content (Area 1)</h3>
+          <p>
+            This is a much longer text that will take even more time to animate.
+            The character shuffle effect will be more noticeable here. Try
+            clicking rapidly between tabs to see how the animation interruption
+            works. The animation should stop immediately and restart with the
+            new content.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab Area 2 with GSAP -->
+    <div class="test-section">
+      <h2>Tab Area 2 - With GSAP Animation</h2>
+      <div class="area-label">Area ID: area2 | GSAP Enabled</div>
+
+      <div
+        class="decoupled-tabs-area"
+        data-tab-area-id="area2"
+        data-smooth-height="true"
+        data-transition-duration="300"
+        data-gsap-enabled="true"
+        data-gsap-shuffle-iterations="3"
+        data-gsap-char-duration="0.03"
+        data-gsap-stagger-amount="0.3"
+        data-gsap-stagger-delay="0.02"
+        data-gsap-on-enter-duration="0.02"
+      >
+        <div
+          class="decoupled-tabs-content is-active"
+          data-tab-id="tab1"
+          id="tab-panel-tab1-2"
+        >
+          <h3>Tab 1 Content (Area 2)</h3>
+          <p>Different content, same tab ID.</p>
+        </div>
+        <div
+          class="decoupled-tabs-content"
+          data-tab-id="tab2"
+          id="tab-panel-tab2-2"
+        >
+          <h3>Tab 2 Content (Area 2)</h3>
+          <p>
+            Area 2 has its own content but shares the same tab IDs, so it will
+            sync with Area 1 when using global triggers.
+          </p>
+        </div>
+        <div
+          class="decoupled-tabs-content"
+          data-tab-id="tab3"
+          id="tab-panel-tab3-2"
+        >
+          <h3>Tab 3 Content (Area 2)</h3>
+          <p>
+            When you click rapidly on the global triggers, both this area and
+            Area 1 should interrupt their animations simultaneously and switch
+            to the new tab together. This ensures perfect synchronization across
+            multiple tab areas.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab Area 3 without GSAP (for comparison) -->
+    <div class="test-section">
+      <h2>Tab Area 3 - Without GSAP (Smooth Height Only)</h2>
+      <div class="area-label">Area ID: area3 | GSAP Disabled</div>
+
+      <div
+        class="decoupled-tabs-area"
+        data-tab-area-id="area3"
+        data-smooth-height="true"
+        data-transition-duration="300"
+        data-gsap-enabled="false"
+      >
+        <div
+          class="decoupled-tabs-content is-active"
+          data-tab-id="tab1"
+          id="tab-panel-tab1-3"
+        >
+          <h3>Tab 1 Content (Area 3)</h3>
+          <p>This area uses smooth height transitions without GSAP.</p>
+        </div>
+        <div
+          class="decoupled-tabs-content"
+          data-tab-id="tab2"
+          id="tab-panel-tab2-3"
+        >
+          <h3>Tab 2 Content (Area 3)</h3>
+          <p>
+            Even without GSAP animations, this area should still sync perfectly
+            with the other areas when using global triggers.
+          </p>
+        </div>
+        <div
+          class="decoupled-tabs-content"
+          data-tab-id="tab3"
+          id="tab-panel-tab3-3"
+        >
+          <h3>Tab 3 Content (Area 3)</h3>
+          <p>
+            The smooth height transition here is simpler and faster than the
+            GSAP character shuffle, but all three areas should still switch
+            together when you click the global triggers.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="info-box">
+      <strong>What to Look For:</strong>
+      <ol>
+        <li>
+          <strong>Instant Response:</strong> Triggers should respond immediately
+          even during animations
+        </li>
+        <li>
+          <strong>Clean Interruption:</strong> Animations should stop cleanly
+          without visual glitches
+        </li>
+        <li>
+          <strong>Perfect Sync:</strong> All three areas should switch to the
+          same tab at the same time
+        </li>
+        <li>
+          <strong>No Blocking:</strong> You should be able to click as fast as
+          you want without delays
+        </li>
+      </ol>
+    </div>
+
+    <script src="build/frontend/tabs.js"></script>
+  </body>
+</html>

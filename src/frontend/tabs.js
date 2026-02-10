@@ -396,7 +396,22 @@ window.SplitText = SplitText;
           0.01,
           Math.min(1, parseFloat(area.dataset.gsapOnEnterDuration) || 0.02),
         ),
+        splitChildren: area.dataset.gsapSplitChildren === 'true',
+        splitLines: area.dataset.gsapSplitLines === 'true',
       };
+
+      // Debug: Log GSAP configuration
+      // eslint-disable-next-line no-console
+      console.log('[initTabArea] GSAP Config:', {
+        areaId,
+        gsapEnabled,
+        splitChildren: gsapConfig.splitChildren,
+        splitLines: gsapConfig.splitLines,
+        dataAttributes: {
+          gsapSplitChildren: area.dataset.gsapSplitChildren,
+          gsapSplitLines: area.dataset.gsapSplitLines,
+        },
+      });
 
       this.tabAreas.set(areaId, {
         element: area,
@@ -537,20 +552,8 @@ window.SplitText = SplitText;
         }
 
         // Switch all matching tabs simultaneously
+        // Allow interruption - animations will be killed and restarted in activateTab
         matchingTabs.forEach(({ tab, area, areaId }) => {
-          if (area.isTransitioning) {
-            // Area is currently animating - interrupt and switch to new target
-            // Kill any in-progress animations
-            area.tabs.forEach((t) => {
-              if (t.currentTween) {
-                t.currentTween.kill();
-                t.currentTween = null;
-              }
-              this.resetElement(t);
-            });
-            // Reset transition flag and activate new tab
-            area.isTransitioning = false;
-          }
           this.activateTab(tab, false, area);
         });
 
@@ -583,19 +586,8 @@ window.SplitText = SplitText;
         return;
       }
 
-      if (tabArea.isTransitioning) {
-        // Area is currently animating - interrupt and switch to new target
-        // Kill any in-progress animations
-        tabArea.tabs.forEach((t) => {
-          if (t.currentTween) {
-            t.currentTween.kill();
-            t.currentTween = null;
-          }
-          this.resetElement(t);
-        });
-        // Reset transition flag
-        tabArea.isTransitioning = false;
-      }
+      // Allow interruption - animations will be killed and restarted in activateTab
+      // This ensures all tabs stay in sync when controlled by the same trigger
 
       // Update trigger active states - pass the specific area ID
       this.updateTriggerStates(tabId, tabAreaId);
@@ -633,6 +625,23 @@ window.SplitText = SplitText;
 
       if (currentTab === tab) {
         return; // Already active
+      }
+
+      // CRITICAL: Update currentTab AND targetTabId IMMEDIATELY to prevent race conditions
+      // targetTabId is used in animation callbacks to detect if target changed
+      tabAreaData.currentTab = tab;
+      tabAreaData.targetTabId = tab.dataset.tabId;
+
+      // Handle rapid tab switching: kill any in-progress animations
+      if (tabAreaData.isTransitioning && gsapEnabled) {
+        // Kill animations on all tabs in this area to prevent queue buildup
+        tabs.forEach((t) => {
+          if (t.currentTween) {
+            t.currentTween.kill();
+            t.currentTween = null;
+          }
+          this.resetElement(t);
+        });
       }
 
       // Mark as transitioning
@@ -686,7 +695,6 @@ window.SplitText = SplitText;
         tab.classList.add('is-active');
         tab.setAttribute('tabindex', '0'); // Add to tab order
 
-        tabAreaData.currentTab = tab;
         tabAreaData.isTransitioning = false;
       }
     }
@@ -843,6 +851,8 @@ window.SplitText = SplitText;
     /**
      * Execute GSAP animation sequence for tab transition
      * Orchestrates onEnter (fade out) and onLeave (shuffle reveal) animations
+     * Handles interruption by skipping fade-out if fromTab is already hidden
+     * Uses targetTabId to detect if target changed during animation
      * @param {HTMLElement} fromTab - The outgoing tab content element
      * @param {HTMLElement} toTab - The incoming tab content element
      * @param {Object} tabAreaData - Tab area configuration data
@@ -851,10 +861,17 @@ window.SplitText = SplitText;
       const { gsapConfig, tabs, smoothHeight, transitionDuration, element } =
         tabAreaData;
 
+      // Capture the target tab ID at the start of this animation
+      const targetTabId = toTab.dataset.tabId;
+
+      // Check if fromTab is already hidden (was being animated out)
+      // If so, we're interrupting an animation and should skip straight to showing new content
+      const fromTabIsHidden = !fromTab.classList.contains('is-active');
+
       // Measure heights BEFORE resetting elements if smooth height is enabled
       let startHeight, endHeight;
       if (smoothHeight) {
-        // Get current height with fromTab visible
+        // Get current height (might be mid-transition)
         startHeight = element.offsetHeight;
 
         // Temporarily show toTab to measure its height
@@ -886,12 +903,54 @@ window.SplitText = SplitText;
       this.resetElement(fromTab);
       this.resetElement(toTab);
 
-      // Keep the incoming tab hidden (display: none) until animation starts
-      // This prevents layout shift during the fade-out of the old tab
+      // If we're interrupting (fromTab already hidden), skip fade-out and go straight to fade-in
+      if (fromTabIsHidden) {
+        // Immediately hide the old tab
+        fromTab.classList.remove('is-active');
+        fromTab.setAttribute('tabindex', '-1');
+
+        // Show the new tab
+        toTab.classList.add('is-active');
+        toTab.setAttribute('tabindex', '0');
+
+        // Apply smooth height transition if enabled
+        if (smoothHeight && startHeight && endHeight) {
+          this.applySmoothHeightTransition(
+            element,
+            startHeight,
+            endHeight,
+            transitionDuration,
+          );
+        }
+
+        // Execute only the onLeave animation (fade-in/shuffle) on the new tab
+        const onLeaveSuccess = this.gsapOnLeave(toTab, gsapConfig, () => {
+          // Check if target changed during animation - if so, abort this callback
+          if (tabAreaData.targetTabId !== targetTabId) {
+            return;
+          }
+          // Animation complete
+          this.completeTabSwitch(fromTab, toTab, tabs, tabAreaData, true);
+        });
+
+        // If onLeave failed, fall back to standard tab switch
+        if (!onLeaveSuccess) {
+          this.standardTabSwitch(fromTab, toTab, tabs, tabAreaData);
+        }
+
+        return;
+      }
+
+      // Normal flow: fromTab is visible, do full two-phase animation
       toTab.setAttribute('tabindex', '0');
 
       // Execute onEnter animation on outgoing tab
       const onEnterSuccess = this.gsapOnEnter(fromTab, gsapConfig, () => {
+        // Check if target changed during animation - if so, abort this callback
+        if (tabAreaData.targetTabId !== targetTabId) {
+          return;
+        }
+
         // onEnter complete, hide the outgoing tab
         fromTab.classList.remove('is-active');
         fromTab.setAttribute('tabindex', '-1');
@@ -911,6 +970,10 @@ window.SplitText = SplitText;
 
         // Now execute onLeave animation on incoming tab
         const onLeaveSuccess = this.gsapOnLeave(toTab, gsapConfig, () => {
+          // Check if target changed during animation - if so, abort this callback
+          if (tabAreaData.targetTabId !== targetTabId) {
+            return;
+          }
           // Both animations complete, now complete the tab switch
           this.completeTabSwitch(fromTab, toTab, tabs, tabAreaData, true);
         });
@@ -932,6 +995,7 @@ window.SplitText = SplitText;
      * Optionally applies smooth height transition if enabled
      * NOTE: When called after GSAP animations, tabs are already visible,
      * so we skip the height animation (it was handled during GSAP transition)
+     * NOTE: currentTab is already updated in activateTab, so we don't update it here
      * @param {HTMLElement} fromTab - The outgoing tab content element
      * @param {HTMLElement} toTab - The incoming tab content element
      * @param {Array} tabs - All tab content elements in the area
@@ -970,9 +1034,6 @@ window.SplitText = SplitText;
 
         toTab.classList.add('is-active');
         toTab.setAttribute('tabindex', '0');
-
-        // Update current tab reference
-        tabAreaData.currentTab = toTab;
 
         // Mark transition as complete
         tabAreaData.isTransitioning = false;
@@ -1020,6 +1081,18 @@ window.SplitText = SplitText;
         target.textSplitter = null;
       }
 
+      // Restore properties that were modified during animation
+      if (target.style.whiteSpace === 'nowrap') {
+        target.style.whiteSpace = '';
+      }
+      if (target.style.overflow === 'hidden') {
+        target.style.overflow = '';
+      }
+      // Reset fixed height that was set during animation
+      if (target.style.height && target.style.height.endsWith('px')) {
+        target.style.height = '';
+      }
+
       // Clear all GSAP properties if GSAP is available
       if (typeof gsap !== 'undefined') {
         gsap.set(target, { clearProps: 'all' });
@@ -1053,25 +1126,112 @@ window.SplitText = SplitText;
       this.resetElement(target);
 
       try {
+        // Determine split type based on configuration
+        let splitType = 'chars';
+        if (config.splitLines) {
+          splitType = 'chars,lines';
+        }
+
+        // eslint-disable-next-line no-console
+        console.log('[gsapOnEnter] Config:', {
+          splitChildren: config.splitChildren,
+          splitLines: config.splitLines,
+          splitType,
+          targetChildren: target.children.length,
+        });
+
         // Wrap text splitting in try-catch
-        target.textSplitter = new SplitText(target, { type: 'chars' });
+        // If splitChildren is enabled, split each child element separately
+        if (config.splitChildren) {
+          // Get direct children of the target
+          const children = Array.from(target.children);
+
+          // eslint-disable-next-line no-console
+          console.log('[gsapOnEnter] Splitting children:', children.length);
+
+          if (children.length === 0) {
+            // No children, split the target itself
+            target.textSplitter = new SplitText(target, { type: splitType });
+          } else {
+            // Split each child element
+            target.textSplitter = new SplitText(children, { type: splitType });
+          }
+        } else {
+          // eslint-disable-next-line no-console
+          console.log('[gsapOnEnter] Splitting entire target as one block');
+          // Split the entire target as one block
+          target.textSplitter = new SplitText(target, { type: splitType });
+        }
 
         // Animate characters to opacity 0 with stagger from end
-        target.currentTween = gsap.to(target.textSplitter.chars, {
-          duration: config.onEnterDuration,
-          ease: 'none',
-          autoAlpha: 0,
-          stagger: {
-            amount: config.staggerAmount,
-            from: 'end',
-          },
-          onComplete: () => {
-            // Clear animation reference
-            target.currentTween = null;
-            // Call completion callback
-            onComplete();
-          },
-        });
+        const chars = target.textSplitter.chars;
+        const lines = target.textSplitter.lines || [];
+
+        // eslint-disable-next-line no-console
+        console.log(
+          '[gsapOnEnter] Chars:',
+          chars.length,
+          'Lines:',
+          lines.length,
+        );
+
+        // If splitLines is enabled and we have lines, animate each line independently
+        if (config.splitLines && lines.length > 0) {
+          // eslint-disable-next-line no-console
+          console.log('[gsapOnEnter] Animating lines independently (fade out)');
+
+          // Create a timeline to coordinate all line animations
+          const tl = gsap.timeline({
+            onComplete: () => {
+              // Clear animation reference
+              target.currentTween = null;
+              // Call completion callback
+              onComplete();
+            },
+          });
+
+          // Animate each line - all lines start at the same time (position 0)
+          lines.forEach((line) => {
+            // Get all characters in this line
+            const lineChars = Array.from(
+              line.querySelectorAll('[style*="display: inline-block"]'),
+            );
+
+            // Animate characters in this line with stagger from end
+            tl.to(
+              lineChars,
+              {
+                duration: config.onEnterDuration,
+                ease: 'none',
+                autoAlpha: 0,
+                stagger: {
+                  amount: config.staggerAmount,
+                  from: 'end',
+                },
+              },
+              0, // All lines start at position 0 (simultaneously)
+            );
+          });
+
+          target.currentTween = tl;
+        } else {
+          // Standard animation: all characters in sequence
+          target.currentTween = gsap.to(chars, {
+            duration: config.onEnterDuration,
+            ease: 'none',
+            autoAlpha: 0,
+            stagger: {
+              amount: config.staggerAmount,
+              from: 'end',
+            },
+            onComplete: () => {
+              // Clear animation reference
+              target.currentTween = null;
+              // Call completion callback
+              onComplete();
+            },
+          });
+        }
 
         return true;
       } catch (error) {
@@ -1119,15 +1279,57 @@ window.SplitText = SplitText;
       this.resetElement(target);
 
       try {
+        // Determine split type based on configuration
+        let splitType = 'chars';
+        if (config.splitLines) {
+          splitType = 'chars,lines';
+        }
+
+        // eslint-disable-next-line no-console
+        console.log('[gsapOnLeave] Config:', {
+          splitChildren: config.splitChildren,
+          splitLines: config.splitLines,
+          splitType,
+          targetChildren: target.children.length,
+        });
+
         // Create new SplitText instance for the incoming tab
         // eslint-disable-next-line no-console
         console.log('[gsapOnLeave] Creating SplitText for target');
-        target.textSplitter = new SplitText(target, { type: 'chars' });
+
+        // If splitChildren is enabled, split each child element separately
+        if (config.splitChildren) {
+          // Get direct children of the target
+          const children = Array.from(target.children);
+
+          // eslint-disable-next-line no-console
+          console.log('[gsapOnLeave] Splitting children:', children.length);
+
+          if (children.length === 0) {
+            // No children, split the target itself
+            target.textSplitter = new SplitText(target, { type: splitType });
+          } else {
+            // Split each child element
+            target.textSplitter = new SplitText(children, { type: splitType });
+          }
+        } else {
+          // eslint-disable-next-line no-console
+          console.log('[gsapOnLeave] Splitting entire target as one block');
+          // Split the entire target as one block
+          target.textSplitter = new SplitText(target, { type: splitType });
+        }
 
         // Get the character array from the text splitter
         const chars = target.textSplitter.chars;
+        const lines = target.textSplitter.lines || [];
+
         // eslint-disable-next-line no-console
-        console.log('[gsapOnLeave] SplitText created, chars:', chars.length);
+        console.log(
+          '[gsapOnLeave] SplitText created, chars:',
+          chars.length,
+          'lines:',
+          lines.length,
+        );
 
         // Validate that we have characters to animate
         if (!chars || chars.length === 0) {
@@ -1138,14 +1340,32 @@ window.SplitText = SplitText;
           return false;
         }
 
+        // Fix the height of the target element AFTER SplitText to prevent layout shifts
+        // SplitText converts text to inline-block which can change the layout
+        const targetHeight = target.offsetHeight;
+        const originalHeight = target.style.height;
+        target.style.height = `${targetHeight}px`;
+
         // Set all characters to opacity 0 initially
         gsap.set(chars, { autoAlpha: 0 });
+
+        // Prevent line breaks and height jumps during scramble animation
+        // Random characters can be wider than original content, causing unwanted wrapping
+        // overflow: hidden prevents the overflowing text from affecting container height
+        const originalWhiteSpace = target.style.whiteSpace;
+        const originalOverflow = target.style.overflow;
+        target.style.whiteSpace = 'nowrap';
+        target.style.overflow = 'hidden';
 
         // Create GSAP timeline for shuffle effect
         const tl = gsap.timeline({
           onComplete: () => {
             // eslint-disable-next-line no-console
             console.log('[gsapOnLeave] Timeline complete');
+            // Restore original values
+            target.style.whiteSpace = originalWhiteSpace;
+            target.style.overflow = originalOverflow;
+            target.style.height = originalHeight;
             // Clear animation reference
             target.currentTween = null;
             // Call completion callback
@@ -1156,40 +1376,90 @@ window.SplitText = SplitText;
         // eslint-disable-next-line no-console
         console.log('[gsapOnLeave] Building timeline with config:', config);
 
-        // Animate each character with shuffle effect
-        chars.forEach((char, index) => {
-          // Store the original character content
-          const originalChar = char.innerHTML;
+        // If splitLines is enabled and we have lines, animate each line independently
+        if (config.splitLines && lines.length > 0) {
+          // eslint-disable-next-line no-console
+          console.log('[gsapOnLeave] Animating lines independently');
 
-          // Calculate the start time for this character's animation sequence
-          const charStartTime = index * config.staggerDelay;
+          // Animate each line - all lines start at the same time (position 0)
+          lines.forEach((line) => {
+            // Get all characters in this line
+            const lineChars = Array.from(
+              line.querySelectorAll('[style*="display: inline-block"]'),
+            );
 
-          // Create shuffle iterations - replace with random letters N times
-          for (let i = 0; i < config.shuffleIterations; i++) {
+            // Animate each character in this line with stagger
+            lineChars.forEach((char, charIndex) => {
+              // Store the original character content
+              const originalChar = char.innerHTML;
+
+              // Calculate the start time for this character within its line
+              const charStartTime = charIndex * config.staggerDelay;
+
+              // Create shuffle iterations - replace with random letters N times
+              for (let i = 0; i < config.shuffleIterations; i++) {
+                tl.to(
+                  char,
+                  {
+                    duration: config.charDuration,
+                    textContent: this.getRandomChar(),
+                    autoAlpha: 1,
+                    ease: 'none',
+                  },
+                  charStartTime + i * config.charDuration,
+                );
+              }
+
+              // Restore original character content and animate to opacity 1
+              tl.to(
+                char,
+                {
+                  duration: config.charDuration,
+                  textContent: originalChar,
+                  autoAlpha: 1,
+                  ease: 'none',
+                },
+                charStartTime + config.shuffleIterations * config.charDuration,
+              );
+            });
+          });
+        } else {
+          // Standard animation: all characters in sequence
+          // Animate each character with shuffle effect
+          chars.forEach((char, index) => {
+            // Store the original character content
+            const originalChar = char.innerHTML;
+
+            // Calculate the start time for this character's animation sequence
+            const charStartTime = index * config.staggerDelay;
+
+            // Create shuffle iterations - replace with random letters N times
+            for (let i = 0; i < config.shuffleIterations; i++) {
+              tl.to(
+                char,
+                {
+                  duration: config.charDuration,
+                  textContent: this.getRandomChar(),
+                  autoAlpha: 1,
+                  ease: 'none',
+                },
+                charStartTime + i * config.charDuration,
+              );
+            }
+
+            // Restore original character content and animate to opacity 1
             tl.to(
               char,
               {
                 duration: config.charDuration,
-                textContent: this.getRandomChar(),
+                textContent: originalChar,
                 autoAlpha: 1,
                 ease: 'none',
               },
-              charStartTime + i * config.charDuration,
+              charStartTime + config.shuffleIterations * config.charDuration,
             );
-          }
-
-          // Restore original character content and animate to opacity 1
-          tl.to(
-            char,
-            {
-              duration: config.charDuration,
-              textContent: originalChar,
-              autoAlpha: 1,
-              ease: 'none',
-            },
-            charStartTime + config.shuffleIterations * config.charDuration,
-          );
-        });
+          });
+        }
 
         // eslint-disable-next-line no-console
         console.log('[gsapOnLeave] Timeline built, duration:', tl.duration());
