@@ -73,7 +73,7 @@
     word-wrap: break-word;
 }
 
-/* Ensure split characters display inline and wrap properly */
+/* Ensure split characters within lines display inline and wrap properly */
 .split-line > div {
     display: inline-block;
     white-space: normal;
@@ -85,8 +85,12 @@
     word-wrap: break-word;
 }
 
-/* Ensure character divs created by SplitText display inline and wrap */
-.decoupled-tabs-content.is-active > * > div {
+/* Character divs created by SplitText (without line splitting) */
+/* These will break at any character, which is expected behavior when not using line splitting */
+.decoupled-tabs-content.is-active > * > div:not(.split-line) {
     display: inline-block;
     white-space: normal;
 }
+
+/* Note: For proper word-based wrapping, enable "Split Multi-Line Text" option */
+/* This creates line containers that preserve natural text flow */

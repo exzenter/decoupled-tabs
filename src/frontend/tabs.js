@@ -1009,11 +1009,11 @@ window.SplitText = SplitText;
 		 * @param {Object} tabAreaData - Tab area configuration data
 		 */
 		completeTabSwitch( fromTab, toTab, tabs, tabAreaData ) {
-			const { smoothHeight, transitionDuration, element, gsapEnabled } = tabAreaData;
+			const { smoothHeight, transitionDuration, element } = tabAreaData;
 
 			// Check if smooth height transition should be applied
-			// Note: Don't apply smooth height if GSAP is enabled, as GSAP handles the transition
-			if ( smoothHeight && ! gsapEnabled ) {
+			// Smooth height works independently of GSAP text animations
+			if ( smoothHeight ) {
 				// Apply smooth height transition along with tab switch
 				this.animateHeightTransition(
 					element,
@@ -1025,7 +1025,6 @@ window.SplitText = SplitText;
 				);
 			} else {
 				// Instant switch - rely on CSS classes for visibility
-				// When GSAP is enabled, the tabs are already in the correct state
 				tabs.forEach( ( t ) => {
 					if ( t !== toTab ) {
 						t.classList.remove( 'is-active' );
@@ -1136,6 +1135,35 @@ window.SplitText = SplitText;
 		}
 
 		/**
+		 * Apply proper CSS to character divs for natural text wrapping
+		 * @param {HTMLElement} element - The parent element
+		 * @param {Object} splitter - The SplitText instance
+		 * @param {Object} config - Animation configuration
+		 */
+		applyCharWrappingStyles( element, splitter, config ) {
+			if ( config.splitLines && splitter.lines ) {
+				// With line splitting, make lines display as blocks
+				splitter.lines.forEach( ( line ) => {
+					gsap.set( line, { display: 'block' } );
+				} );
+			} else if ( splitter.chars ) {
+				// Without line splitting, ensure chars wrap naturally like text
+				// Set parent to allow normal text wrapping
+				gsap.set( element, { 
+					whiteSpace: 'normal',
+					wordWrap: 'break-word'
+				} );
+				// Set chars to display inline (not inline-block) for natural wrapping
+				splitter.chars.forEach( ( char ) => {
+					gsap.set( char, { 
+						display: 'inline',
+						whiteSpace: 'normal'
+					} );
+				} );
+			}
+		}
+
+		/**
 		 * Execute onEnter animation (fade out) on outgoing tab content
 		 * Splits text into characters and animates them to opacity 0 with stagger from end
 		 * Each child element animates independently based on config
@@ -1204,12 +1232,8 @@ window.SplitText = SplitText;
 					} );
 					target.textSplitters.push( splitter );
 
-					// Fix line wrapping CSS - make lines display as blocks
-					if ( config.splitLines && splitter.lines ) {
-						splitter.lines.forEach( ( line ) => {
-							gsap.set( line, { display: 'block' } );
-						} );
-					}
+					// Apply proper wrapping styles
+					this.applyCharWrappingStyles( element, splitter, config );
 
 					// When splitLines is enabled, animate each line independently
 					// Otherwise animate all characters together
@@ -1357,12 +1381,8 @@ window.SplitText = SplitText;
 					} );
 					target.textSplitters.push( splitter );
 
-					// Fix line wrapping CSS - make lines display as blocks
-					if ( config.splitLines && splitter.lines ) {
-						splitter.lines.forEach( ( line ) => {
-							gsap.set( line, { display: 'block' } );
-						} );
-					}
+					// Apply proper wrapping styles
+					this.applyCharWrappingStyles( element, splitter, config );
 
 					// When splitLines is enabled, animate each line independently
 					// Otherwise animate all characters together

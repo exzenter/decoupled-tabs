@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test: Smooth Height with GSAP</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        .decoupled-tabs-area {
+            border: 2px solid #333;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .decoupled-tabs-content {
+            display: none;
+            padding: 20px;
+            background: white;
+            border: 1px solid #ddd;
+        }
+        .decoupled-tabs-content.is-active {
+            display: block;
+        }
+        .trigger-group {
+            margin-bottom: 20px;
+            display: flex;
+            gap: 10px;
+        }
+        [data-tab-target] {
+            padding: 10px 20px;
+            background: #007cba;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        [data-tab-target].is-active {
+            background: #005a87;
+        }
+        [data-tab-target]:hover {
+            background: #006ba1;
+        }
+        .info {
+            background: #e7f5ff;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-left: 4px solid #007cba;
+        }
+    </style>
+</head>
+<body>
+    <h1>Smooth Height Transition with GSAP Test</h1>
+    
+    <div class="info">
+        <strong>Test Configuration:</strong>
+        <ul>
+            <li>✅ GSAP Enabled</li>
+            <li>✅ Smooth Height Enabled</li>
+            <li>✅ Character shuffle animation on tab switch</li>
+        </ul>
+        <p><strong>Expected behavior:</strong> When switching tabs, you should see both the GSAP character shuffle animation AND a smooth height transition.</p>
+    </div>
+
+    <div class="trigger-group">
+        <button data-tab-target="tab1" data-tab-area="test-area" class="is-active">Short Tab</button>
+        <button data-tab-target="tab2" data-tab-area="test-area">Medium Tab</button>
+        <button data-tab-target="tab3" data-tab-area="test-area">Long Tab</button>
+    </div>
+
+    <div class="decoupled-tabs-area" 
+         data-tab-area-id="test-area"
+         data-smooth-height="true"
+         data-transition-duration="500"
+         data-gsap-enabled="true"
+         data-gsap-shuffle-iterations="2"
+         data-gsap-char-duration="0.02"
+         data-gsap-stagger-amount="0.25"
+         data-gsap-stagger-delay="0.03"
+         data-gsap-on-enter-duration="0.02"
+         data-gsap-split-children="true"
+         data-gsap-split-lines="false"
+         data-gsap-timing-mode="same-duration"
+         data-gsap-animate-on-load="false">
+        
+        <div class="decoupled-tabs-content is-active" 
+             data-tab-id="tab1" 
+             id="tab-panel-tab1" 
+             role="tabpanel">
+            <h2>Short Content</h2>
+            <p>This is a short tab with minimal content.</p>
+        </div>
+
+        <div class="decoupled-tabs-content" 
+             data-tab-id="tab2" 
+             id="tab-panel-tab2" 
+             role="tabpanel">
+            <h2>Medium Content</h2>
+            <p>This tab has a bit more content to demonstrate the smooth height transition.</p>
+            <p>When you switch from the short tab to this one, the container should smoothly expand.</p>
+            <p>The GSAP character shuffle animation should play simultaneously with the height transition.</p>
+        </div>
+
+        <div class="decoupled-tabs-content" 
+             data-tab-id="tab3" 
+             id="tab-panel-tab3" 
+             role="tabpanel">
+            <h2>Long Content</h2>
+            <p>This tab has the most content to really show off the smooth height transition.</p>
+            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
+            <p>Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
+            <p>Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.</p>
+            <p>Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+            <p>Watch how the container smoothly expands to accommodate all this content while the text animates with GSAP!</p>
+        </div>
+    </div>
+
+    <script src="build/frontend/tabs.js"></script>
+</body>
+</html>
