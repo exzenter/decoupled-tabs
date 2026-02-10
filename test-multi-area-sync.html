@@ -1,0 +1,303 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Multi-Area Tab Sync Test - Decoupled Tabs</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+
+      .test-section {
+        margin-bottom: 40px;
+        padding: 20px;
+        border: 2px solid #ddd;
+        border-radius: 8px;
+      }
+
+      h2 {
+        margin-top: 0;
+        color: #333;
+      }
+
+      /* Tab Area Styles */
+      .decoupled-tabs-area {
+        border: 1px solid #ccc;
+        padding: 20px;
+        margin: 20px 0;
+        background: #f9f9f9;
+      }
+
+      .decoupled-tabs-content {
+        display: none;
+        padding: 20px;
+        background: white;
+        border: 1px solid #ddd;
+        margin-top: 10px;
+      }
+
+      .decoupled-tabs-content.is-active {
+        display: block;
+      }
+
+      /* Trigger Styles */
+      .trigger-group {
+        display: flex;
+        gap: 10px;
+        margin: 20px 0;
+        flex-wrap: wrap;
+      }
+
+      [data-tab-target] {
+        padding: 10px 20px;
+        background: #e0e0e0;
+        border: 2px solid #999;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: all 0.3s;
+      }
+
+      [data-tab-target]:hover {
+        background: #d0d0d0;
+      }
+
+      [data-tab-target].is-active {
+        background: #4caf50;
+        color: white;
+        border-color: #45a049;
+      }
+
+      .info-box {
+        background: #e3f2fd;
+        padding: 15px;
+        border-left: 4px solid #2196f3;
+        margin: 20px 0;
+      }
+
+      .area-label {
+        font-weight: bold;
+        color: #666;
+        margin-bottom: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Multi-Area Tab Synchronization Test</h1>
+
+    <div class="info-box">
+      <strong>Test Scenario:</strong> This page demonstrates the new feature
+      where triggers without a specific tab area ID can control all tabs with
+      the same ID across multiple tab areas simultaneously. <br /><br />
+      <strong>Expected Behavior:</strong> Clicking the "Global Triggers" should
+      switch all tab areas to the same tab at once. The "Area-Specific Triggers"
+      should only affect their designated tab area.
+    </div>
+
+    <!-- Global Triggers (no data-tab-area attribute) -->
+    <div class="test-section">
+      <h2>Global Triggers (Control All Areas)</h2>
+      <p>
+        These triggers have NO <code>data-tab-area</code> attribute, so they
+        target all tabs with matching IDs:
+      </p>
+      <div class="trigger-group">
+        <div data-tab-target="intro">Global: Intro</div>
+        <div data-tab-target="features">Global: Features</div>
+        <div data-tab-target="pricing">Global: Pricing</div>
+      </div>
+    </div>
+
+    <!-- Tab Area 1 -->
+    <div class="test-section">
+      <h2>Tab Area 1 - Product Information</h2>
+      <div class="area-label">Area ID: product-tabs</div>
+
+      <!-- Area-specific triggers -->
+      <div class="trigger-group">
+        <div data-tab-target="intro" data-tab-area="product-tabs">
+          Area 1: Intro
+        </div>
+        <div data-tab-target="features" data-tab-area="product-tabs">
+          Area 1: Features
+        </div>
+        <div data-tab-target="pricing" data-tab-area="product-tabs">
+          Area 1: Pricing
+        </div>
+      </div>
+
+      <div
+        class="decoupled-tabs-area"
+        data-tab-area-id="product-tabs"
+        data-smooth-height="false"
+      >
+        <div
+          class="decoupled-tabs-content is-active"
+          data-tab-id="intro"
+          id="tab-panel-intro-1"
+        >
+          <h3>Introduction (Area 1)</h3>
+          <p>
+            Welcome to our product! This is the introduction tab in the first
+            tab area.
+          </p>
+        </div>
+        <div
+          class="decoupled-tabs-content"
+          data-tab-id="features"
+          id="tab-panel-features-1"
+        >
+          <h3>Features (Area 1)</h3>
+          <p>
+            Our product includes amazing features like synchronization across
+            multiple tab areas!
+          </p>
+        </div>
+        <div
+          class="decoupled-tabs-content"
+          data-tab-id="pricing"
+          id="tab-panel-pricing-1"
+        >
+          <h3>Pricing (Area 1)</h3>
+          <p>Check out our competitive pricing plans for this product.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab Area 2 -->
+    <div class="test-section">
+      <h2>Tab Area 2 - Service Information</h2>
+      <div class="area-label">Area ID: service-tabs</div>
+
+      <!-- Area-specific triggers -->
+      <div class="trigger-group">
+        <div data-tab-target="intro" data-tab-area="service-tabs">
+          Area 2: Intro
+        </div>
+        <div data-tab-target="features" data-tab-area="service-tabs">
+          Area 2: Features
+        </div>
+        <div data-tab-target="pricing" data-tab-area="service-tabs">
+          Area 2: Pricing
+        </div>
+      </div>
+
+      <div
+        class="decoupled-tabs-area"
+        data-tab-area-id="service-tabs"
+        data-smooth-height="false"
+      >
+        <div
+          class="decoupled-tabs-content is-active"
+          data-tab-id="intro"
+          id="tab-panel-intro-2"
+        >
+          <h3>Introduction (Area 2)</h3>
+          <p>
+            Welcome to our service! This is the introduction tab in the second
+            tab area.
+          </p>
+        </div>
+        <div
+          class="decoupled-tabs-content"
+          data-tab-id="features"
+          id="tab-panel-features-2"
+        >
+          <h3>Features (Area 2)</h3>
+          <p>
+            Our service offers unique features that complement the product
+            perfectly!
+          </p>
+        </div>
+        <div
+          class="decoupled-tabs-content"
+          data-tab-id="pricing"
+          id="tab-panel-pricing-2"
+        >
+          <h3>Pricing (Area 2)</h3>
+          <p>Flexible pricing options available for our service packages.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab Area 3 -->
+    <div class="test-section">
+      <h2>Tab Area 3 - Support Information</h2>
+      <div class="area-label">Area ID: support-tabs</div>
+
+      <!-- Area-specific triggers -->
+      <div class="trigger-group">
+        <div data-tab-target="intro" data-tab-area="support-tabs">
+          Area 3: Intro
+        </div>
+        <div data-tab-target="features" data-tab-area="support-tabs">
+          Area 3: Features
+        </div>
+        <div data-tab-target="pricing" data-tab-area="support-tabs">
+          Area 3: Pricing
+        </div>
+      </div>
+
+      <div
+        class="decoupled-tabs-area"
+        data-tab-area-id="support-tabs"
+        data-smooth-height="false"
+      >
+        <div
+          class="decoupled-tabs-content is-active"
+          data-tab-id="intro"
+          id="tab-panel-intro-3"
+        >
+          <h3>Introduction (Area 3)</h3>
+          <p>
+            Welcome to support! This is the introduction tab in the third tab
+            area.
+          </p>
+        </div>
+        <div
+          class="decoupled-tabs-content"
+          data-tab-id="features"
+          id="tab-panel-features-3"
+        >
+          <h3>Features (Area 3)</h3>
+          <p>
+            Our support system includes comprehensive documentation and live
+            chat!
+          </p>
+        </div>
+        <div
+          class="decoupled-tabs-content"
+          data-tab-id="pricing"
+          id="tab-panel-pricing-3"
+        >
+          <h3>Pricing (Area 3)</h3>
+          <p>Support is included with all our plans at no extra cost!</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="info-box">
+      <strong>Testing Instructions:</strong>
+      <ol>
+        <li>
+          Click on "Global: Features" - all three tab areas should switch to the
+          Features tab
+        </li>
+        <li>
+          Click on "Area 1: Pricing" - only Area 1 should switch to Pricing
+        </li>
+        <li>
+          Click on "Global: Intro" - all three areas should switch back to Intro
+        </li>
+        <li>
+          Try mixing global and area-specific triggers to see the behavior
+        </li>
+      </ol>
+    </div>
+
+    <script src="build/frontend/tabs.js"></script>
+  </body>
+</html>

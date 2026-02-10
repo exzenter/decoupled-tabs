@@ -1,0 +1,322 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Multi-Toggle Race Condition Test</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+
+      .test-controls {
+        background: #f0f0f0;
+        padding: 20px;
+        margin-bottom: 30px;
+        border-radius: 8px;
+      }
+
+      .trigger-group {
+        margin: 10px 0;
+      }
+
+      .trigger {
+        display: inline-block;
+        padding: 10px 20px;
+        margin: 5px;
+        background: #007cba;
+        color: white;
+        cursor: pointer;
+        border-radius: 4px;
+        transition: background 0.2s;
+      }
+
+      .trigger:hover {
+        background: #005a87;
+      }
+
+      .trigger.is-active {
+        background: #00a32a;
+      }
+
+      .tab-areas {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+      }
+
+      .decoupled-tabs-area {
+        border: 2px solid #ddd;
+        padding: 20px;
+        border-radius: 8px;
+        min-height: 200px;
+      }
+
+      .decoupled-tabs-content {
+        display: none;
+      }
+
+      .decoupled-tabs-content.is-active {
+        display: block;
+      }
+
+      .status {
+        margin-top: 20px;
+        padding: 15px;
+        background: #fff3cd;
+        border: 1px solid #ffc107;
+        border-radius: 4px;
+      }
+
+      .status-item {
+        margin: 5px 0;
+        font-family: monospace;
+      }
+
+      .error {
+        color: #d63638;
+        font-weight: bold;
+      }
+
+      .success {
+        color: #00a32a;
+        font-weight: bold;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Multi-Toggle Race Condition Test</h1>
+    <p>
+      Test scenario: Ein Toggle schaltet mehrere Tab-Areas gleichzeitig. Während
+      die Animationen laufen (unterschiedlich lang), wird ein anderer Toggle
+      aktiviert.
+    </p>
+
+    <div class="test-controls">
+      <h2>Triggers (steuern beide Areas gleichzeitig)</h2>
+      <div class="trigger-group">
+        <div class="trigger" data-tab-target="tab1">Tab 1 (kurzer Text)</div>
+        <div class="trigger" data-tab-target="tab2">Tab 2 (mittlerer Text)</div>
+        <div class="trigger" data-tab-target="tab3">Tab 3 (langer Text)</div>
+      </div>
+
+      <button
+        onclick="rapidToggleTest()"
+        style="
+          margin-top: 20px;
+          padding: 10px 20px;
+          background: #d63638;
+          color: white;
+          border: none;
+          border-radius: 4px;
+          cursor: pointer;
+        "
+      >
+        🔥 Rapid Toggle Test (Tab1 → Tab3 → Tab2)
+      </button>
+
+      <button
+        onclick="checkConsistency()"
+        style="
+          margin-top: 20px;
+          padding: 10px 20px;
+          background: #007cba;
+          color: white;
+          border: none;
+          border-radius: 4px;
+          cursor: pointer;
+        "
+      >
+        ✓ Check Consistency
+      </button>
+    </div>
+
+    <div class="tab-areas">
+      <!-- Tab Area 1: Schnelle Animation -->
+      <div
+        class="decoupled-tabs-area"
+        data-tab-area-id="area1"
+        data-smooth-height="true"
+        data-transition-duration="300"
+        data-gsap-enabled="true"
+        data-gsap-shuffle-iterations="1"
+        data-gsap-char-duration="0.02"
+        data-gsap-stagger-amount="0.15"
+        data-gsap-stagger-delay="0.02"
+        data-gsap-on-enter-duration="0.02"
+      >
+        <h3>Area 1 (Schnelle Animation)</h3>
+
+        <div class="decoupled-tabs-content is-active" data-tab-id="tab1">
+          <h4>Tab 1</h4>
+          <p>Kurzer Text.</p>
+        </div>
+
+        <div class="decoupled-tabs-content" data-tab-id="tab2">
+          <h4>Tab 2</h4>
+          <p>Mittlerer Text mit etwas mehr Inhalt für die Animation.</p>
+        </div>
+
+        <div class="decoupled-tabs-content" data-tab-id="tab3">
+          <h4>Tab 3</h4>
+          <p>
+            Langer Text mit deutlich mehr Inhalt, der eine längere Animation
+            benötigt und mehr Zeit zum Animieren braucht.
+          </p>
+        </div>
+      </div>
+
+      <!-- Tab Area 2: Langsame Animation -->
+      <div
+        class="decoupled-tabs-area"
+        data-tab-area-id="area2"
+        data-smooth-height="true"
+        data-transition-duration="500"
+        data-gsap-enabled="true"
+        data-gsap-shuffle-iterations="3"
+        data-gsap-char-duration="0.05"
+        data-gsap-stagger-amount="0.5"
+        data-gsap-stagger-delay="0.05"
+        data-gsap-on-enter-duration="0.05"
+      >
+        <h3>Area 2 (Langsame Animation)</h3>
+
+        <div class="decoupled-tabs-content is-active" data-tab-id="tab1">
+          <h4>Tab 1</h4>
+          <p>Kurzer Text.</p>
+        </div>
+
+        <div class="decoupled-tabs-content" data-tab-id="tab2">
+          <h4>Tab 2</h4>
+          <p>Mittlerer Text mit etwas mehr Inhalt für die Animation.</p>
+        </div>
+
+        <div class="decoupled-tabs-content" data-tab-id="tab3">
+          <h4>Tab 3</h4>
+          <p>
+            Langer Text mit deutlich mehr Inhalt, der eine längere Animation
+            benötigt und mehr Zeit zum Animieren braucht.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="status" id="status">
+      <h3>Status</h3>
+      <div id="statusContent">
+        Klicke auf "Check Consistency" um den Zustand zu prüfen.
+      </div>
+    </div>
+
+    <script src="build/frontend/tabs.js"></script>
+
+    <script>
+      function rapidToggleTest() {
+        const statusEl = document.getElementById('statusContent');
+        statusEl.innerHTML =
+          '<div class="status-item">🔥 Starting rapid toggle test...</div>';
+
+        // Tab 1 aktivieren
+        statusEl.innerHTML +=
+          '<div class="status-item">→ Switching to Tab 1</div>';
+        document.querySelector('[data-tab-target="tab1"]').click();
+
+        // Nach 100ms zu Tab 3 wechseln (während Area 2 noch animiert)
+        setTimeout(() => {
+          statusEl.innerHTML +=
+            '<div class="status-item">→ Switching to Tab 3 (interrupting Area 2)</div>';
+          document.querySelector('[data-tab-target="tab3"]').click();
+        }, 100);
+
+        // Nach weiteren 150ms zu Tab 2 wechseln (während beide noch animieren könnten)
+        setTimeout(() => {
+          statusEl.innerHTML +=
+            '<div class="status-item">→ Switching to Tab 2 (interrupting both areas)</div>';
+          document.querySelector('[data-tab-target="tab2"]').click();
+        }, 250);
+
+        // Nach 2 Sekunden Konsistenz prüfen
+        setTimeout(() => {
+          statusEl.innerHTML +=
+            '<div class="status-item">→ Checking consistency...</div>';
+          checkConsistency();
+        }, 2000);
+      }
+
+      function checkConsistency() {
+        const statusEl = document.getElementById('statusContent');
+        let html = '<h4>Consistency Check Results:</h4>';
+
+        // Prüfe welche Tabs in beiden Areas aktiv sind
+        const area1ActiveTab = document.querySelector(
+          '#area1 .decoupled-tabs-content.is-active',
+        );
+        const area2ActiveTab = document.querySelector(
+          '#area2 .decoupled-tabs-content.is-active',
+        );
+
+        const area1TabId = area1ActiveTab
+          ? area1ActiveTab.dataset.tabId
+          : 'NONE';
+        const area2TabId = area2ActiveTab
+          ? area2ActiveTab.dataset.tabId
+          : 'NONE';
+
+        html += `<div class="status-item">Area 1 active tab: <strong>${area1TabId}</strong></div>`;
+        html += `<div class="status-item">Area 2 active tab: <strong>${area2TabId}</strong></div>`;
+
+        // Prüfe welche Triggers aktiv sind
+        const activeTriggers = Array.from(
+          document.querySelectorAll('.trigger.is-active'),
+        );
+        const activeTriggerIds = activeTriggers.map((t) => t.dataset.tabTarget);
+
+        html += `<div class="status-item">Active triggers: <strong>${
+          activeTriggerIds.join(', ') || 'NONE'
+        }</strong></div>`;
+
+        // Konsistenz-Check
+        const isConsistent =
+          area1TabId === area2TabId &&
+          activeTriggerIds.length === 1 &&
+          activeTriggerIds[0] === area1TabId;
+
+        if (isConsistent) {
+          html +=
+            '<div class="status-item success">✓ CONSISTENT: Alle Areas und Triggers zeigen denselben Tab!</div>';
+        } else {
+          html +=
+            '<div class="status-item error">✗ INCONSISTENT: Mismatch zwischen Areas oder Triggers!</div>';
+
+          if (area1TabId !== area2TabId) {
+            html +=
+              '<div class="status-item error">  → Areas zeigen unterschiedliche Tabs</div>';
+          }
+
+          if (activeTriggerIds.length !== 1) {
+            html +=
+              '<div class="status-item error">  → Mehrere oder keine Triggers aktiv</div>';
+          }
+
+          if (
+            activeTriggerIds[0] !== area1TabId ||
+            activeTriggerIds[0] !== area2TabId
+          ) {
+            html +=
+              '<div class="status-item error">  → Trigger-State stimmt nicht mit Tab-State überein</div>';
+          }
+        }
+
+        statusEl.innerHTML = html;
+      }
+
+      // Initial check nach 1 Sekunde
+      setTimeout(() => {
+        checkConsistency();
+      }, 1000);
+    </script>
+  </body>
+</html>

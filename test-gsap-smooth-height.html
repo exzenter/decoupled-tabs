@@ -1,0 +1,360 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GSAP + Smooth Height Test - Decoupled Tabs</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        max-width: 1000px;
+        margin: 0 auto;
+        padding: 20px;
+        background: #f5f5f5;
+      }
+
+      h1 {
+        color: #333;
+      }
+
+      .info-box {
+        background: #e3f2fd;
+        padding: 15px;
+        border-left: 4px solid #2196f3;
+        margin: 20px 0;
+      }
+
+      .test-section {
+        background: white;
+        padding: 20px;
+        margin: 20px 0;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+
+      /* Tab Area Styles */
+      .decoupled-tabs-area {
+        border: 2px solid #ddd;
+        padding: 20px;
+        margin: 20px 0;
+        background: #fafafa;
+        border-radius: 4px;
+      }
+
+      .decoupled-tabs-content {
+        display: none;
+        padding: 20px;
+        background: white;
+        border: 1px solid #ddd;
+        margin-top: 10px;
+        border-radius: 4px;
+      }
+
+      .decoupled-tabs-content.is-active {
+        display: block;
+      }
+
+      /* Trigger Styles */
+      .trigger-group {
+        display: flex;
+        gap: 10px;
+        margin: 20px 0;
+        flex-wrap: wrap;
+      }
+
+      [data-tab-target] {
+        padding: 12px 24px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.3s;
+        font-weight: 500;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+      }
+
+      [data-tab-target]:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+      }
+
+      [data-tab-target].is-active {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        transform: scale(1.05);
+      }
+
+      .content-short {
+        min-height: 100px;
+      }
+
+      .content-medium {
+        min-height: 200px;
+      }
+
+      .content-tall {
+        min-height: 400px;
+      }
+
+      .feature-badge {
+        display: inline-block;
+        background: #4caf50;
+        color: white;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: bold;
+        margin-left: 10px;
+      }
+
+      .config-info {
+        background: #fff3cd;
+        padding: 10px;
+        border-radius: 4px;
+        margin: 10px 0;
+        font-size: 14px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>GSAP + Smooth Height Transition Test</h1>
+
+    <div class="info-box">
+      <strong>Test Purpose:</strong> Verify that GSAP character shuffle
+      animations and smooth height transitions work together correctly.
+      <br /><br />
+      <strong>Expected Behavior:</strong>
+      <ul>
+        <li>Text should shuffle with GSAP animation when switching tabs</li>
+        <li>
+          Container height should animate SIMULTANEOUSLY with GSAP text
+          animation
+        </li>
+        <li>No layout jumps or glitches during transitions</li>
+        <li>Tabs with different heights should transition smoothly</li>
+      </ul>
+    </div>
+
+    <!-- Test 1: GSAP + Smooth Height ENABLED -->
+    <div class="test-section">
+      <h2>
+        Test 1: GSAP + Smooth Height <span class="feature-badge">BOTH ON</span>
+      </h2>
+      <div class="config-info">
+        <strong>Config:</strong> data-gsap-enabled="true" +
+        data-smooth-height="true"
+        <br />
+        <strong>Expected:</strong> GSAP text animation AND smooth height
+        animation play simultaneously
+      </div>
+
+      <div class="trigger-group">
+        <div data-tab-target="short" data-tab-area="test1">Short Content</div>
+        <div data-tab-target="medium" data-tab-area="test1">Medium Content</div>
+        <div data-tab-target="tall" data-tab-area="test1">Tall Content</div>
+      </div>
+
+      <div
+        class="decoupled-tabs-area"
+        data-tab-area-id="test1"
+        data-smooth-height="true"
+        data-transition-duration="300"
+        data-gsap-enabled="true"
+        data-gsap-shuffle-iterations="3"
+        data-gsap-char-duration="0.03"
+        data-gsap-stagger-amount="0.3"
+        data-gsap-stagger-delay="0.02"
+        data-gsap-on-enter-duration="0.02"
+      >
+        <div
+          class="decoupled-tabs-content is-active content-short"
+          data-tab-id="short"
+          id="tab-panel-short-1"
+        >
+          <h3>Short Content Tab</h3>
+          <p>
+            This is a short tab with minimal content. Watch the GSAP shuffle
+            animation!
+          </p>
+        </div>
+
+        <div
+          class="decoupled-tabs-content content-medium"
+          data-tab-id="medium"
+          id="tab-panel-medium-1"
+        >
+          <h3>Medium Content Tab</h3>
+          <p>This tab has more content to demonstrate height differences.</p>
+          <p>
+            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do
+            eiusmod tempor incididunt ut labore et dolore magna aliqua.
+          </p>
+          <p>
+            Notice how the GSAP animation handles the transition smoothly
+            without conflicting with height changes.
+          </p>
+        </div>
+
+        <div
+          class="decoupled-tabs-content content-tall"
+          data-tab-id="tall"
+          id="tab-panel-tall-1"
+        >
+          <h3>Tall Content Tab</h3>
+          <p>
+            This tab has significantly more content to test large height
+            differences.
+          </p>
+          <p>
+            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do
+            eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim
+            ad minim veniam, quis nostrud exercitation ullamco laboris.
+          </p>
+          <p>
+            Duis aute irure dolor in reprehenderit in voluptate velit esse
+            cillum dolore eu fugiat nulla pariatur.
+          </p>
+          <p>
+            Excepteur sint occaecat cupidatat non proident, sunt in culpa qui
+            officia deserunt mollit anim id est laborum.
+          </p>
+          <p>
+            The GSAP character shuffle should play smoothly even with this much
+            content.
+          </p>
+          <p>
+            Additional paragraph to make this tab even taller for testing
+            purposes.
+          </p>
+          <p>
+            And one more paragraph to really emphasize the height difference!
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Test 2: GSAP ONLY (no smooth height) -->
+    <div class="test-section">
+      <h2>Test 2: GSAP Only <span class="feature-badge">GSAP ON</span></h2>
+      <div class="config-info">
+        <strong>Config:</strong> data-gsap-enabled="true" +
+        data-smooth-height="false"
+        <br />
+        <strong>Expected:</strong> GSAP animation plays, instant height change
+      </div>
+
+      <div class="trigger-group">
+        <div data-tab-target="short2" data-tab-area="test2">Short</div>
+        <div data-tab-target="medium2" data-tab-area="test2">Medium</div>
+        <div data-tab-target="tall2" data-tab-area="test2">Tall</div>
+      </div>
+
+      <div
+        class="decoupled-tabs-area"
+        data-tab-area-id="test2"
+        data-smooth-height="false"
+        data-gsap-enabled="true"
+        data-gsap-shuffle-iterations="2"
+        data-gsap-char-duration="0.02"
+        data-gsap-stagger-amount="0.25"
+        data-gsap-stagger-delay="0.03"
+      >
+        <div
+          class="decoupled-tabs-content is-active content-short"
+          data-tab-id="short2"
+        >
+          <h3>Short (GSAP Only)</h3>
+          <p>GSAP animation with instant height change.</p>
+        </div>
+
+        <div
+          class="decoupled-tabs-content content-medium"
+          data-tab-id="medium2"
+        >
+          <h3>Medium (GSAP Only)</h3>
+          <p>More content here to show height differences.</p>
+          <p>The GSAP shuffle plays but height changes instantly.</p>
+        </div>
+
+        <div class="decoupled-tabs-content content-tall" data-tab-id="tall2">
+          <h3>Tall (GSAP Only)</h3>
+          <p>Lots of content in this tab.</p>
+          <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
+          <p>Sed do eiusmod tempor incididunt ut labore.</p>
+          <p>Notice the instant height change with GSAP text animation.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Test 3: Smooth Height ONLY (no GSAP) -->
+    <div class="test-section">
+      <h2>
+        Test 3: Smooth Height Only <span class="feature-badge">HEIGHT ON</span>
+      </h2>
+      <div class="config-info">
+        <strong>Config:</strong> data-gsap-enabled="false" +
+        data-smooth-height="true"
+        <br />
+        <strong>Expected:</strong> No GSAP animation, smooth height transition
+        only
+      </div>
+
+      <div class="trigger-group">
+        <div data-tab-target="short3" data-tab-area="test3">Short</div>
+        <div data-tab-target="medium3" data-tab-area="test3">Medium</div>
+        <div data-tab-target="tall3" data-tab-area="test3">Tall</div>
+      </div>
+
+      <div
+        class="decoupled-tabs-area"
+        data-tab-area-id="test3"
+        data-smooth-height="true"
+        data-transition-duration="400"
+        data-gsap-enabled="false"
+      >
+        <div
+          class="decoupled-tabs-content is-active content-short"
+          data-tab-id="short3"
+        >
+          <h3>Short (Height Only)</h3>
+          <p>Smooth height transition without GSAP.</p>
+        </div>
+
+        <div
+          class="decoupled-tabs-content content-medium"
+          data-tab-id="medium3"
+        >
+          <h3>Medium (Height Only)</h3>
+          <p>Watch the container smoothly animate to this height.</p>
+          <p>No character shuffle, just smooth height changes.</p>
+        </div>
+
+        <div class="decoupled-tabs-content content-tall" data-tab-id="tall3">
+          <h3>Tall (Height Only)</h3>
+          <p>The container should smoothly expand to fit this content.</p>
+          <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
+          <p>
+            Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+          </p>
+          <p>This demonstrates pure CSS height transitions.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="info-box">
+      <strong>Success Criteria:</strong>
+      <ul>
+        <li>
+          ✓ Test 1: GSAP text animation AND smooth height animation play
+          simultaneously
+        </li>
+        <li>✓ Test 2: GSAP animation plays with instant height change</li>
+        <li>✓ Test 3: Smooth height animation without GSAP</li>
+        <li>✓ No console errors</li>
+        <li>✓ No visual glitches or layout jumps</li>
+      </ul>
+    </div>
+
+    <script src="build/frontend/tabs.js"></script>
+  </body>
+</html>
