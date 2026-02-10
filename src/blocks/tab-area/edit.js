@@ -30,6 +30,7 @@ export default function Edit( { attributes, setAttributes, clientId } ) {
 		gsapSplitChildren,
 		gsapTimingMode,
 		gsapSplitLines,
+		gsapAnimateOnLoad,
 	} = attributes;
 
 	const blockProps = useBlockProps( {
@@ -137,6 +138,17 @@ export default function Edit( { attributes, setAttributes, clientId } ) {
 								checked={ gsapSplitLines }
 								onChange={ ( value ) =>
 									setAttributes( { gsapSplitLines: value } )
+								}
+							/>
+							<ToggleControl
+								label={ __( 'Animate on Page Load', 'decoupled-tabs' ) }
+								help={ __(
+									'Play the shuffle animation when the page first loads for the initially active tab.',
+									'decoupled-tabs'
+								) }
+								checked={ gsapAnimateOnLoad }
+								onChange={ ( value ) =>
+									setAttributes( { gsapAnimateOnLoad: value } )
 								}
 							/>
 							<SelectControl

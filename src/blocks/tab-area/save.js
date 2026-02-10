@@ -15,6 +15,7 @@ export default function save( { attributes } ) {
 		gsapSplitChildren,
 		gsapTimingMode,
 		gsapSplitLines,
+		gsapAnimateOnLoad,
 	} = attributes;
 
 	const blockProps = useBlockProps.save( {
@@ -32,6 +33,7 @@ export default function save( { attributes } ) {
 		'data-gsap-split-children': gsapSplitChildren ? 'true' : 'false',
 		'data-gsap-timing-mode': gsapTimingMode,
 		'data-gsap-split-lines': gsapSplitLines ? 'true' : 'false',
+		'data-gsap-animate-on-load': gsapAnimateOnLoad ? 'true' : 'false',
 	} );
 
 	return (

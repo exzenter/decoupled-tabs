@@ -23,6 +23,20 @@
     overflow: visible;
 }
 
+/* Ensure content elements display correctly when tab is active */
+.decoupled-tabs-content.is-active > p,
+.decoupled-tabs-content.is-active > h1,
+.decoupled-tabs-content.is-active > h2,
+.decoupled-tabs-content.is-active > h3,
+.decoupled-tabs-content.is-active > h4,
+.decoupled-tabs-content.is-active > h5,
+.decoupled-tabs-content.is-active > h6,
+.decoupled-tabs-content.is-active > ul,
+.decoupled-tabs-content.is-active > ol,
+.decoupled-tabs-content.is-active > div:not(.split-line):not([class*="split"]) {
+    display: block !important;
+}
+
 /* =====================
    Trigger Active State
    ===================== */
@@ -55,9 +69,24 @@
 /* Ensure split lines maintain proper block layout */
 .split-line {
     display: block !important;
+    white-space: normal !important;
+    word-wrap: break-word;
 }
 
-/* Ensure split characters display inline */
+/* Ensure split characters display inline and wrap properly */
 .split-line > div {
     display: inline-block;
+    white-space: normal;
+}
+
+/* When splitting chars without lines, ensure parent allows wrapping */
+.decoupled-tabs-content.is-active > * {
+    white-space: normal !important;
+    word-wrap: break-word;
+}
+
+/* Ensure character divs created by SplitText display inline and wrap */
+.decoupled-tabs-content.is-active > * > div {
+    display: inline-block;
+    white-space: normal;
 }

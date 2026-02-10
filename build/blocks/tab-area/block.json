@@ -70,6 +70,10 @@
     "gsapSplitLines": {
       "type": "boolean",
       "default": false
+    },
+    "gsapAnimateOnLoad": {
+      "type": "boolean",
+      "default": false
     }
   },
   "supports": {
