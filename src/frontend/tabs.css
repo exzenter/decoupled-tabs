@@ -48,3 +48,16 @@
     outline: 2px solid currentColor;
     outline-offset: 2px;
 }
+
+/* =====================
+   GSAP SplitText Fixes
+   ===================== */
+/* Ensure split lines maintain proper block layout */
+.split-line {
+    display: block !important;
+}
+
+/* Ensure split characters display inline */
+.split-line > div {
+    display: inline-block;
+}

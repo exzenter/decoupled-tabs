@@ -412,9 +412,6 @@ window.SplitText = SplitText;
 			// Note: We don't check GSAP availability here - we'll check at animation time
 			// This allows GSAP to load asynchronously without blocking initialization
 			const gsapEnabled = area.dataset.gsapEnabled === 'true';
-			const gsapSplitChildren = area.dataset.gsapSplitChildren !== 'false'; // Default true
-			const gsapSplitLines = area.dataset.gsapSplitLines === 'true'; // Default false
-			const gsapTimingMode = area.dataset.gsapTimingMode || 'same-duration';
 
 			// Parse and validate GSAP configuration parameters
 			// Clamp values to valid ranges with fallback to defaults
@@ -454,9 +451,6 @@ window.SplitText = SplitText;
 						parseFloat( area.dataset.gsapOnEnterDuration ) || 0.02
 					)
 				),
-				splitChildren: gsapSplitChildren,
-				splitLines: gsapSplitLines,
-				timingMode: gsapTimingMode,
 			};
 
 			this.tabAreas.set( areaId, {
@@ -982,16 +976,6 @@ window.SplitText = SplitText;
 				target.textSplitter = null;
 			}
 
-			// Clean up multiple text splitters if they exist
-			if ( target.textSplitters && Array.isArray( target.textSplitters ) ) {
-				target.textSplitters.forEach( ( splitter ) => {
-					if ( splitter ) {
-						splitter.revert();
-					}
-				} );
-				target.textSplitters = [];
-			}
-
 			// Clear all GSAP properties if GSAP is available
 			if ( typeof gsap !== 'undefined' ) {
 				gsap.set( target, { clearProps: 'all' } );
@@ -1001,7 +985,6 @@ window.SplitText = SplitText;
 		/**
 		 * Execute onEnter animation (fade out) on outgoing tab content
 		 * Splits text into characters and animates them to opacity 0 with stagger from end
-		 * Each child element animates independently based on config
 		 * @param {HTMLElement} target - The tab content element to animate
 		 * @param {Object} config - GSAP animation configuration
 		 * @param {Function} onComplete - Callback to execute when animation completes
@@ -1026,24 +1009,18 @@ window.SplitText = SplitText;
 			this.resetElement( target );
 
 			try {
-				// Determine elements to animate based on splitChildren setting
-				let elementsToAnimate = [ target ];
-				if ( config.splitChildren ) {
-					const childElements = Array.from( target.children ).filter(
-						( child ) => child.textContent && child.textContent.trim()
-					);
-					if ( childElements.length > 0 ) {
-						elementsToAnimate = childElements;
-					}
-				}
+				// Wrap text splitting in try-catch
+				target.textSplitter = new SplitText( target, { type: 'chars' } );
 
-				// Store all text splitters for cleanup
-				if ( ! target.textSplitters ) {
-					target.textSplitters = [];
-				}
-
-				// Create a timeline to coordinate all element animations
-				const tl = gsap.timeline( {
+				// Animate characters to opacity 0 with stagger from end
+				target.currentTween = gsap.to( target.textSplitter.chars, {
+					duration: config.onEnterDuration,
+					ease: 'none',
+					autoAlpha: 0,
+					stagger: {
+						amount: config.staggerAmount,
+						from: 'end',
+					},
 					onComplete: () => {
 						// Clear animation reference
 						target.currentTween = null;
@@ -1051,82 +1028,6 @@ window.SplitText = SplitText;
 						onComplete();
 					},
 				} );
-
-				// Animate each element independently - all starting at the same time
-				elementsToAnimate.forEach( ( element ) => {
-					// Determine split type based on config
-					let splitType = 'chars';
-					if ( config.splitLines ) {
-						splitType = 'lines,chars';
-					}
-
-					// Create SplitText for this specific element
-					const splitter = new SplitText( element, { 
-						type: splitType,
-						linesClass: 'split-line'
-					} );
-					target.textSplitters.push( splitter );
-
-					// Fix line wrapping CSS - make lines display as blocks
-					if ( config.splitLines && splitter.lines ) {
-						splitter.lines.forEach( ( line ) => {
-							gsap.set( line, { display: 'block' } );
-						} );
-					}
-
-					// When splitLines is enabled, animate each line independently
-					// Otherwise animate all characters together
-					if ( config.splitLines && splitter.lines && splitter.lines.length > 0 ) {
-						// Animate each line independently
-						splitter.lines.forEach( ( line ) => {
-							// Get characters within this line
-							const lineChars = Array.from( line.querySelectorAll( 'div' ) );
-							
-							if ( lineChars.length === 0 ) {
-								return;
-							}
-
-							// Animate this line's characters
-							tl.to(
-								lineChars,
-								{
-									duration: config.onEnterDuration,
-									ease: 'none',
-									autoAlpha: 0,
-									stagger: {
-										amount: config.staggerAmount,
-										from: 'end',
-									},
-								},
-								0 // All lines start at time 0
-							);
-						} );
-					} else {
-						// No line splitting - animate all chars together
-						const chars = splitter.chars;
-
-						if ( ! chars || chars.length === 0 ) {
-							return;
-						}
-
-						tl.to(
-							chars,
-							{
-								duration: config.onEnterDuration,
-								ease: 'none',
-								autoAlpha: 0,
-								stagger: {
-									amount: config.staggerAmount,
-									from: 'end',
-								},
-							},
-							0
-						);
-					}
-				} );
-
-				// Store timeline reference
-				target.currentTween = tl;
 
 				return true;
 			} catch ( error ) {
@@ -1142,13 +1043,15 @@ window.SplitText = SplitText;
 		/**
 		 * Execute onLeave animation (shuffle and reveal) on incoming tab content
 		 * Shuffles characters through random letters before revealing original content
-		 * Each child element animates independently with its own character stagger
 		 * @param {HTMLElement} target - The tab content element to animate
 		 * @param {Object} config - GSAP animation configuration
 		 * @param {Function} onComplete - Callback to execute when animation completes
 		 * @return {boolean} True if animation started successfully, false if it failed
 		 */
 		gsapOnLeave( target, config, onComplete ) {
+			// eslint-disable-next-line no-console
+			console.log( '[gsapOnLeave] Starting animation', { target, config } );
+
 			// Check for valid tab content before animating
 			if ( ! target || ! target.textContent || ! target.textContent.trim() ) {
 				// eslint-disable-next-line no-console
@@ -1160,6 +1063,8 @@ window.SplitText = SplitText;
 
 			// Kill existing animation if present
 			if ( target.currentTween ) {
+				// eslint-disable-next-line no-console
+				console.log( '[gsapOnLeave] Killing existing tween' );
 				target.currentTween.kill();
 			}
 
@@ -1167,20 +1072,33 @@ window.SplitText = SplitText;
 			this.resetElement( target );
 
 			try {
-				// Determine elements to animate based on splitChildren setting
-				let elementsToAnimate = [ target ];
-				if ( config.splitChildren ) {
-					const childElements = Array.from( target.children ).filter(
-						( child ) => child.textContent && child.textContent.trim()
+				// Create new SplitText instance for the incoming tab
+				// eslint-disable-next-line no-console
+				console.log( '[gsapOnLeave] Creating SplitText for target' );
+				target.textSplitter = new SplitText( target, { type: 'chars' } );
+				
+				// Get the character array from the text splitter
+				const chars = target.textSplitter.chars;
+				// eslint-disable-next-line no-console
+				console.log( '[gsapOnLeave] SplitText created, chars:', chars.length );
+
+				// Validate that we have characters to animate
+				if ( ! chars || chars.length === 0 ) {
+					// eslint-disable-next-line no-console
+					console.warn(
+						'Decoupled Tabs: No characters available for animation, falling back to standard tab switch'
 					);
-					if ( childElements.length > 0 ) {
-						elementsToAnimate = childElements;
-					}
+					return false;
 				}
+
+				// Set all characters to opacity 0 initially
+				gsap.set( chars, { autoAlpha: 0 } );
 
 				// Create GSAP timeline for shuffle effect
 				const tl = gsap.timeline( {
 					onComplete: () => {
+						// eslint-disable-next-line no-console
+						console.log( '[gsapOnLeave] Timeline complete' );
 						// Clear animation reference
 						target.currentTween = null;
 						// Call completion callback
@@ -1188,148 +1106,46 @@ window.SplitText = SplitText;
 					},
 				} );
 
-				// Store all text splitters for cleanup
-				if ( ! target.textSplitters ) {
-					target.textSplitters = [];
-				}
+				// eslint-disable-next-line no-console
+				console.log( '[gsapOnLeave] Building timeline with config:', config );
 
-				// Animate each element independently - all starting at the same time
-				elementsToAnimate.forEach( ( element ) => {
-					// Determine split type based on config
-					let splitType = 'chars';
-					if ( config.splitLines ) {
-						splitType = 'lines,chars';
+				// Animate each character with shuffle effect
+				chars.forEach( ( char, index ) => {
+					// Store the original character content
+					const originalChar = char.innerHTML;
+
+					// Calculate the start time for this character's animation sequence
+					const charStartTime = index * config.staggerDelay;
+
+					// Create shuffle iterations - replace with random letters N times
+					for ( let i = 0; i < config.shuffleIterations; i++ ) {
+						tl.to(
+							char,
+							{
+								duration: config.charDuration,
+								textContent: this.getRandomChar(),
+								autoAlpha: 1,
+								ease: 'none',
+							},
+							charStartTime + i * config.charDuration
+						);
 					}
 
-					// Create SplitText for this specific element
-					const splitter = new SplitText( element, { 
-						type: splitType,
-						linesClass: 'split-line'
-					} );
-					target.textSplitters.push( splitter );
-
-					// Fix line wrapping CSS - make lines display as blocks
-					if ( config.splitLines && splitter.lines ) {
-						splitter.lines.forEach( ( line ) => {
-							gsap.set( line, { display: 'block' } );
-						} );
-					}
-
-					// When splitLines is enabled, animate each line independently
-					// Otherwise animate all characters together
-					if ( config.splitLines && splitter.lines && splitter.lines.length > 0 ) {
-						// Animate each line independently
-						splitter.lines.forEach( ( line ) => {
-							// Get characters within this line
-							const lineChars = Array.from( line.querySelectorAll( 'div' ) );
-							
-							if ( lineChars.length === 0 ) {
-								return;
-							}
-
-							// Set all characters to opacity 0 initially
-							gsap.set( lineChars, { autoAlpha: 0 } );
-
-							// Calculate timing based on mode
-							let charDelay, charDuration;
-							if ( config.timingMode === 'same-speed' ) {
-								charDelay = config.staggerDelay;
-								charDuration = config.charDuration;
-							} else {
-								const totalChars = lineChars.length;
-								const totalDuration = config.staggerAmount;
-								charDelay = totalDuration / totalChars;
-								charDuration = charDelay / ( config.shuffleIterations + 1 );
-							}
-
-							// Animate each character with shuffle effect
-							lineChars.forEach( ( char, charIndex ) => {
-								const originalChar = char.innerHTML;
-								const charStartTime = charIndex * charDelay;
-
-								// Shuffle iterations
-								for ( let i = 0; i < config.shuffleIterations; i++ ) {
-									tl.to(
-										char,
-										{
-											duration: charDuration,
-											textContent: this.getRandomChar(),
-											autoAlpha: 1,
-											ease: 'none',
-										},
-										charStartTime + i * charDuration
-									);
-								}
-
-								// Restore original character
-								tl.to(
-									char,
-									{
-										duration: charDuration,
-										textContent: originalChar,
-										autoAlpha: 1,
-										ease: 'none',
-									},
-									charStartTime + config.shuffleIterations * charDuration
-								);
-							} );
-						} );
-					} else {
-						// No line splitting - animate all chars together
-						const chars = splitter.chars;
-
-						if ( ! chars || chars.length === 0 ) {
-							return;
-						}
-
-						// Set all characters to opacity 0 initially
-						gsap.set( chars, { autoAlpha: 0 } );
-
-						// Calculate timing based on mode
-						let charDelay, charDuration;
-						if ( config.timingMode === 'same-speed' ) {
-							charDelay = config.staggerDelay;
-							charDuration = config.charDuration;
-						} else {
-							const totalChars = chars.length;
-							const totalDuration = config.staggerAmount;
-							charDelay = totalDuration / totalChars;
-							charDuration = charDelay / ( config.shuffleIterations + 1 );
-						}
-
-						// Animate each character with shuffle effect
-						chars.forEach( ( char, charIndex ) => {
-							const originalChar = char.innerHTML;
-							const charStartTime = charIndex * charDelay;
-
-							// Shuffle iterations
-							for ( let i = 0; i < config.shuffleIterations; i++ ) {
-								tl.to(
-									char,
-									{
-										duration: charDuration,
-										textContent: this.getRandomChar(),
-										autoAlpha: 1,
-										ease: 'none',
-									},
-									charStartTime + i * charDuration
-								);
-							}
-
-							// Restore original character
-							tl.to(
-								char,
-								{
-									duration: charDuration,
-									textContent: originalChar,
-									autoAlpha: 1,
-									ease: 'none',
-								},
-								charStartTime + config.shuffleIterations * charDuration
-							);
-						} );
-					}
+					// Restore original character content and animate to opacity 1
+					tl.to(
+						char,
+						{
+							duration: config.charDuration,
+							textContent: originalChar,
+							autoAlpha: 1,
+							ease: 'none',
+						},
+						charStartTime + config.shuffleIterations * config.charDuration
+					);
 				} );
+
+				// eslint-disable-next-line no-console
+				console.log( '[gsapOnLeave] Timeline built, duration:', tl.duration() );
 
 				// Store timeline reference on element
 				target.currentTween = tl;

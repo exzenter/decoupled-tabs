@@ -3,7 +3,6 @@ import {
 	useBlockProps,
 	InnerBlocks,
 	InspectorControls,
-	useInnerBlocksProps,
 } from '@wordpress/block-editor';
 import {
 	PanelBody,
@@ -21,11 +20,6 @@ export default function Edit( { attributes, setAttributes, clientId } ) {
 
 	const blockProps = useBlockProps( {
 		className: 'decoupled-tabs-trigger-editor',
-	} );
-
-	const innerBlocksProps = useInnerBlocksProps( blockProps, {
-		templateLock: false,
-		renderAppender: InnerBlocks.ButtonBlockAppender,
 	} );
 
 	// Generate a unique ID if not set
@@ -75,7 +69,7 @@ export default function Edit( { attributes, setAttributes, clientId } ) {
 					/>
 				</PanelBody>
 			</InspectorControls>
-			<div { ...innerBlocksProps }>
+			<div { ...blockProps }>
 				{ ! tabTarget && (
 					<div className="decoupled-tabs-trigger-notice">
 						{ __(
@@ -84,6 +78,10 @@ export default function Edit( { attributes, setAttributes, clientId } ) {
 						) }
 					</div>
 				) }
+				<InnerBlocks
+					templateLock={ false }
+					renderAppender={ InnerBlocks.ButtonBlockAppender }
+				/>
 			</div>
 		</>
 	);

@@ -12,6 +12,9 @@ export default function save( { attributes } ) {
 		gsapStaggerAmount,
 		gsapStaggerDelay,
 		gsapOnEnterDuration,
+		gsapSplitChildren,
+		gsapTimingMode,
+		gsapSplitLines,
 	} = attributes;
 
 	const blockProps = useBlockProps.save( {
@@ -26,6 +29,9 @@ export default function save( { attributes } ) {
 		'data-gsap-stagger-amount': gsapStaggerAmount,
 		'data-gsap-stagger-delay': gsapStaggerDelay,
 		'data-gsap-on-enter-duration': gsapOnEnterDuration,
+		'data-gsap-split-children': gsapSplitChildren ? 'true' : 'false',
+		'data-gsap-timing-mode': gsapTimingMode,
+		'data-gsap-split-lines': gsapSplitLines ? 'true' : 'false',
 	} );
 
 	return (

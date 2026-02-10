@@ -49,6 +49,19 @@
 		"gsapOnEnterDuration": {
 			"type": "number",
 			"default": 0.02
+		},
+		"gsapSplitChildren": {
+			"type": "boolean",
+			"default": true
+		},
+		"gsapTimingMode": {
+			"type": "string",
+			"default": "same-duration",
+			"enum": [ "same-duration", "same-speed" ]
+		},
+		"gsapSplitLines": {
+			"type": "boolean",
+			"default": false
 		}
 	},
 	"supports": {

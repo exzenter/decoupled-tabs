@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Split Lines Feature</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        
+        .decoupled-tabs-area {
+            position: relative;
+            border: 2px solid #ccc;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .decoupled-tabs-content {
+            position: absolute;
+            left: -10000px;
+            top: auto;
+            width: 1px;
+            height: 1px;
+            overflow: hidden;
+        }
+        
+        .decoupled-tabs-content.is-active {
+            position: static;
+            left: auto;
+            width: auto;
+            height: auto;
+            overflow: visible;
+        }
+        
+        .split-line {
+            display: block !important;
+        }
+        
+        .split-line > div {
+            display: inline-block;
+        }
+        
+        .trigger-group {
+            margin-bottom: 20px;
+        }
+        
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            cursor: pointer;
+            border: 2px solid #333;
+            background: white;
+        }
+        
+        button.is-active {
+            background: #333;
+            color: white;
+        }
+        
+        .test-paragraph {
+            width: 400px;
+            line-height: 1.6;
+        }
+        
+        .debug-info {
+            background: #f0f0f0;
+            padding: 10px;
+            margin: 20px 0;
+            font-family: monospace;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Split Lines Feature Test</h1>
+    
+    <div class="debug-info">
+        <strong>Debug Info:</strong>
+        <div id="debug-output">Waiting for interaction...</div>
+    </div>
+    
+    <div class="trigger-group">
+        <button data-tab-target="tab1" data-tab-area="test-area" class="is-active">Tab 1 (Short)</button>
+        <button data-tab-target="tab2" data-tab-area="test-area">Tab 2 (Multi-line)</button>
+    </div>
+    
+    <div class="decoupled-tabs-area" 
+         data-tab-area-id="test-area"
+         data-default-tab="tab1"
+         data-smooth-height="false"
+         data-transition-duration="300"
+         data-gsap-enabled="true"
+         data-gsap-shuffle-iterations="2"
+         data-gsap-char-duration="0.02"
+         data-gsap-stagger-amount="0.25"
+         data-gsap-stagger-delay="0.03"
+         data-gsap-on-enter-duration="0.02"
+         data-gsap-split-children="true"
+         data-gsap-split-lines="true"
+         data-gsap-timing-mode="same-duration">
+        
+        <div class="decoupled-tabs-content is-active" data-tab-id="tab1">
+            <p>Short text content.</p>
+        </div>
+        
+        <div class="decoupled-tabs-content" data-tab-id="tab2">
+            <p class="test-paragraph">This is a longer paragraph that should wrap across multiple lines when the container width is limited. Each line should animate independently when the split lines feature is enabled.</p>
+            <p class="test-paragraph">Here is another paragraph with multiple lines of text to test the cascading animation effect across different lines.</p>
+        </div>
+    </div>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/SplitText.min.js"></script>
+    <script src="build/frontend/tabs.js"></script>
+    
+    <script>
+        // Add debug logging
+        const debugOutput = document.getElementById('debug-output');
+        
+        function log(message) {
+            const timestamp = new Date().toLocaleTimeString();
+            debugOutput.innerHTML += `<br>[${timestamp}] ${message}`;
+            console.log(message);
+        }
+        
+        // Monitor tab switches
+        document.querySelectorAll('[data-tab-target]').forEach(trigger => {
+            trigger.addEventListener('click', () => {
+                const tabId = trigger.dataset.tabTarget;
+                const splitLines = document.querySelector('.decoupled-tabs-area').dataset.gsapSplitLines;
+                log(`Switching to ${tabId}, splitLines: ${splitLines}`);
+            });
+        });
+        
+        // Check if GSAP and SplitText are loaded
+        setTimeout(() => {
+            log(`GSAP loaded: ${typeof gsap !== 'undefined'}`);
+            log(`SplitText loaded: ${typeof SplitText !== 'undefined'}`);
+            
+            // Test SplitText manually
+            const testP = document.querySelector('.test-paragraph');
+            if (testP && typeof SplitText !== 'undefined') {
+                const testSplit = new SplitText(testP, { type: 'lines', linesClass: 'split-line' });
+                log(`Manual split test - Lines detected: ${testSplit.lines ? testSplit.lines.length : 0}`);
+                testSplit.revert();
+            }
+        }, 1000);
+    </script>
+</body>
+</html>

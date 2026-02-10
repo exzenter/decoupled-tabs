@@ -9,6 +9,7 @@ import {
 	TextControl,
 	ToggleControl,
 	RangeControl,
+	SelectControl,
 	__experimentalNumberControl as NumberControl,
 } from '@wordpress/components';
 
@@ -26,6 +27,9 @@ export default function Edit( { attributes, setAttributes, clientId } ) {
 		gsapStaggerAmount,
 		gsapStaggerDelay,
 		gsapOnEnterDuration,
+		gsapSplitChildren,
+		gsapTimingMode,
+		gsapSplitLines,
 	} = attributes;
 
 	const blockProps = useBlockProps( {
@@ -113,6 +117,43 @@ export default function Edit( { attributes, setAttributes, clientId } ) {
 					/>
 					{ gsapEnabled && (
 						<>
+							<ToggleControl
+								label={ __( 'Split Child Elements', 'decoupled-tabs' ) }
+								help={ __(
+									'Animate each child element (paragraphs, headings) separately. When disabled, all text animates as one block.',
+									'decoupled-tabs'
+								) }
+								checked={ gsapSplitChildren }
+								onChange={ ( value ) =>
+									setAttributes( { gsapSplitChildren: value } )
+								}
+							/>
+							<ToggleControl
+								label={ __( 'Split Multi-Line Text', 'decoupled-tabs' ) }
+								help={ __(
+									'When text wraps across multiple lines, treat each line independently. Creates a cascading effect for wrapped text.',
+									'decoupled-tabs'
+								) }
+								checked={ gsapSplitLines }
+								onChange={ ( value ) =>
+									setAttributes( { gsapSplitLines: value } )
+								}
+							/>
+							<SelectControl
+								label={ __( 'Animation Timing Mode', 'decoupled-tabs' ) }
+								help={ __(
+									'Same Duration: All elements finish at the same time (longer text animates faster). Same Speed: All characters animate at the same speed (longer text takes longer).',
+									'decoupled-tabs'
+								) }
+								value={ gsapTimingMode }
+								options={ [
+									{ label: __( 'Same Duration', 'decoupled-tabs' ), value: 'same-duration' },
+									{ label: __( 'Same Speed', 'decoupled-tabs' ), value: 'same-speed' },
+								] }
+								onChange={ ( value ) =>
+									setAttributes( { gsapTimingMode: value } )
+								}
+							/>
 							<RangeControl
 								label={ __( 'Shuffle Iterations', 'decoupled-tabs' ) }
 								help={ __(
