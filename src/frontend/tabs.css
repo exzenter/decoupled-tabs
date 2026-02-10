@@ -1,26 +1,26 @@
 /* Frontend Tab Styles */
 
 .decoupled-tabs-area {
-    position: relative;
+  position: relative;
 }
 
 /* Base tab content state - visually hidden but accessible to screen readers and crawlers */
 .decoupled-tabs-content {
-    position: absolute;
-    left: -10000px;
-    top: auto;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
+  position: absolute;
+  left: -10000px;
+  top: auto;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
 }
 
 /* Active tab state - visible and in normal flow */
 .decoupled-tabs-content.is-active {
-    position: static;
-    left: auto;
-    width: auto;
-    height: auto;
-    overflow: visible;
+  position: static;
+  left: auto;
+  width: auto;
+  height: auto;
+  overflow: visible;
 }
 
 /* Ensure content elements display correctly when tab is active */
@@ -33,19 +33,19 @@
 .decoupled-tabs-content.is-active > h6,
 .decoupled-tabs-content.is-active > ul,
 .decoupled-tabs-content.is-active > ol,
-.decoupled-tabs-content.is-active > div:not(.split-line):not([class*="split"]) {
-    display: block !important;
+.decoupled-tabs-content.is-active > div:not(.split-line):not([class*='split']) {
+  display: block !important;
 }
 
 /* =====================
    Trigger Active State
    ===================== */
 [data-tab-target] {
-    cursor: pointer;
+  cursor: pointer;
 }
 
 [data-tab-target].is-active {
-    /* Users can style this as desired */
+  /* Users can style this as desired */
 }
 
 /* =====================
@@ -53,14 +53,14 @@
    ===================== */
 /* Focus indicator for keyboard navigation */
 [data-tab-target]:focus {
-    outline: 2px solid currentColor;
-    outline-offset: 2px;
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
 }
 
 /* Ensure focus is visible even with custom styles */
 [data-tab-target]:focus-visible {
-    outline: 2px solid currentColor;
-    outline-offset: 2px;
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
 }
 
 /* =====================
@@ -68,28 +68,28 @@
    ===================== */
 /* Ensure split lines maintain proper block layout */
 .split-line {
-    display: block !important;
-    white-space: normal !important;
-    word-wrap: break-word;
+  display: block !important;
+  white-space: normal !important;
+  word-wrap: break-word;
 }
 
 /* Ensure split characters within lines display inline and wrap properly */
 .split-line > div {
-    display: inline-block;
-    white-space: normal;
+  display: inline-block;
+  white-space: normal;
 }
 
 /* When splitting chars without lines, ensure parent allows wrapping */
 .decoupled-tabs-content.is-active > * {
-    white-space: normal !important;
-    word-wrap: break-word;
+  white-space: normal !important;
+  word-wrap: break-word;
 }
 
 /* Character divs created by SplitText (without line splitting) */
 /* These will break at any character, which is expected behavior when not using line splitting */
 .decoupled-tabs-content.is-active > * > div:not(.split-line) {
-    display: inline-block;
-    white-space: normal;
+  display: inline-block;
+  white-space: normal;
 }
 
 /* Note: For proper word-based wrapping, enable "Split Multi-Line Text" option */
