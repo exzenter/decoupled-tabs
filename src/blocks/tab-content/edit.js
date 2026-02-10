@@ -11,7 +11,6 @@ import {
 	RangeControl,
 	ToggleControl,
 } from '@wordpress/components';
-import { useState } from '@wordpress/element';
 
 const TRANSITION_OPTIONS = [
 	{
@@ -38,12 +37,9 @@ export default function Edit( { attributes, setAttributes, clientId } ) {
 		transitionType,
 		transitionDuration,
 	} = attributes;
-	const [ isExpanded, setIsExpanded ] = useState( true );
 
 	const blockProps = useBlockProps( {
-		className: `decoupled-tabs-content-editor ${
-			isExpanded ? 'is-expanded' : 'is-collapsed'
-		}`,
+		className: 'decoupled-tabs-content-editor',
 	} );
 
 	// Generate a unique tab ID if not set
@@ -135,43 +131,10 @@ export default function Edit( { attributes, setAttributes, clientId } ) {
 				</PanelBody>
 			</InspectorControls>
 			<div { ...blockProps }>
-				<div
-					className="decoupled-tabs-content-header"
-					onClick={ () => setIsExpanded( ! isExpanded ) }
-					role="button"
-					tabIndex={ 0 }
-					onKeyDown={ ( e ) => {
-						if ( e.key === 'Enter' || e.key === ' ' ) {
-							setIsExpanded( ! isExpanded );
-					} }	}
-				>
-					<span className="decoupled-tabs-content-toggle">
-						{ isExpanded ? '▼' : '▶' }
-					</span>
-					<span className="decoupled-tabs-content-label">
-						{ tabLabel || __( 'Tab Content', 'decoupled-tabs' ) }
-					</span>
-					<code className="decoupled-tabs-content-id">{ tabId }</code>
-					{ overrideTransition && (
-						<span
-							className="decoupled-tabs-content-override"
-							title={ __(
-								'Custom transition',
-								'decoupled-tabs'
-							) }
-						>
-							✦
-						</span>
-					) }
-				</div>
-				{ isExpanded && (
-					<div className="decoupled-tabs-content-body">
-						<InnerBlocks
-							templateLock={ false }
-							renderAppender={ InnerBlocks.ButtonBlockAppender }
-						/>
-					</div>
-				) }
+				<InnerBlocks
+					templateLock={ false }
+					renderAppender={ InnerBlocks.ButtonBlockAppender }
+				/>
 			</div>
 		</>
 	);

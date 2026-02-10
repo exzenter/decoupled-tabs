@@ -3,6 +3,7 @@ import {
 	useBlockProps,
 	InnerBlocks,
 	InspectorControls,
+	BlockControls,
 } from '@wordpress/block-editor';
 import {
 	PanelBody,
@@ -11,7 +12,12 @@ import {
 	RangeControl,
 	SelectControl,
 	__experimentalNumberControl as NumberControl,
+	ToolbarGroup,
+	ToolbarButton,
 } from '@wordpress/components';
+import { plus } from '@wordpress/icons';
+import { useDispatch, useSelect } from '@wordpress/data';
+import { createBlock } from '@wordpress/blocks';
 
 const ALLOWED_BLOCKS = [ 'decoupled-tabs/tab-content' ];
 
@@ -33,6 +39,23 @@ export default function Edit( { attributes, setAttributes, clientId } ) {
 		gsapAnimateOnLoad,
 	} = attributes;
 
+	const { insertBlock } = useDispatch( 'core/block-editor' );
+	const { innerBlocks } = useSelect(
+		( select ) => ( {
+			innerBlocks: select( 'core/block-editor' ).getBlocks( clientId ),
+		} ),
+		[ clientId ]
+	);
+
+	const addNewTab = () => {
+		const tabCount = innerBlocks.length + 1;
+		const newBlock = createBlock( 'decoupled-tabs/tab-content', {
+			tabId: `tab-${ tabCount }`,
+			tabLabel: `Tab ${ tabCount }`,
+		} );
+		insertBlock( newBlock, innerBlocks.length, clientId );
+	};
+
 	const blockProps = useBlockProps( {
 		className: 'decoupled-tabs-area-editor',
 	} );
@@ -44,6 +67,15 @@ export default function Edit( { attributes, setAttributes, clientId } ) {
 
 	return (
 		<>
+			<BlockControls>
+				<ToolbarGroup>
+					<ToolbarButton
+						icon={ plus }
+						label={ __( 'Add Tab', 'decoupled-tabs' ) }
+						onClick={ addNewTab }
+					/>
+				</ToolbarGroup>
+			</BlockControls>
 			<InspectorControls>
 				<PanelBody
 					title={ __( 'Tab Area Settings', 'decoupled-tabs' ) }
@@ -241,35 +273,20 @@ export default function Edit( { attributes, setAttributes, clientId } ) {
 				</PanelBody>
 			</InspectorControls>
 			<div { ...blockProps }>
-				<div className="decoupled-tabs-area-header">
-					<span className="decoupled-tabs-area-label">
-						{ __( 'Tab Area', 'decoupled-tabs' ) }
-						{ tabAreaId && <code>{ tabAreaId }</code> }
-					</span>
-					<span className="decoupled-tabs-area-info">
-						{ __(
-							'Add Tab Content blocks below',
-							'decoupled-tabs'
-						) }
-					</span>
-				</div>
-				<div className="decoupled-tabs-area-content">
-					<InnerBlocks
-						allowedBlocks={ ALLOWED_BLOCKS }
-						template={ [
-							[
-								'decoupled-tabs/tab-content',
-								{ tabId: 'tab-1', tabLabel: 'Tab 1' },
-							],
-							[
-								'decoupled-tabs/tab-content',
-								{ tabId: 'tab-2', tabLabel: 'Tab 2' },
-							],
-						] }
-						templateLock={ false }
-						renderAppender={ InnerBlocks.ButtonBlockAppender }
-					/>
-				</div>
+				<InnerBlocks
+					allowedBlocks={ ALLOWED_BLOCKS }
+					template={ [
+						[
+							'decoupled-tabs/tab-content',
+							{ tabId: 'tab-1', tabLabel: 'Tab 1' },
+						],
+						[
+							'decoupled-tabs/tab-content',
+							{ tabId: 'tab-2', tabLabel: 'Tab 2' },
+						],
+					] }
+					templateLock={ false }
+				/>
 			</div>
 		</>
 	);

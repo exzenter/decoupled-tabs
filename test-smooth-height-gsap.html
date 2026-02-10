@@ -59,10 +59,16 @@
         <strong>Test Configuration:</strong>
         <ul>
             <li>✅ GSAP Enabled</li>
-            <li>✅ Smooth Height Enabled</li>
+            <li>✅ Smooth Height Enabled (500ms transition)</li>
             <li>✅ Character shuffle animation on tab switch</li>
         </ul>
-        <p><strong>Expected behavior:</strong> When switching tabs, you should see both the GSAP character shuffle animation AND a smooth height transition.</p>
+        <p><strong>Expected behavior:</strong> When switching tabs, you should see:</p>
+        <ol>
+            <li>The container height smoothly transitions to match the new tab's content</li>
+            <li>GSAP character shuffle animation plays simultaneously</li>
+            <li>Check the browser console for [SMOOTH HEIGHT] logs showing the transition</li>
+        </ol>
+        <p><strong>How to test:</strong> Click between "Short Tab", "Medium Tab", and "Long Tab" and watch the container expand/contract smoothly while text animates.</p>
     </div>
 
     <div class="trigger-group">

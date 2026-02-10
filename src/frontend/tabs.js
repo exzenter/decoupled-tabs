@@ -488,16 +488,6 @@ window.SplitText = SplitText;
 				const tabAreaData = this.tabAreas.get( areaId );
 				const shouldAnimate = tabAreaData && tabAreaData.gsapEnabled && tabAreaData.gsapAnimateOnLoad;
 				
-				// eslint-disable-next-line no-console
-				console.log( '[DEBUG] initTabArea - setting initial active tab:', {
-					areaId,
-					activeTabId: activeTab.dataset.tabId,
-					gsapEnabled: tabAreaData.gsapEnabled,
-					gsapAnimateOnLoad: tabAreaData.gsapAnimateOnLoad,
-					shouldAnimate,
-					immediateMode: ! shouldAnimate,
-				} );
-				
 				// If animate on load is enabled, don't use immediate mode
 				this.activateTab( activeTab, ! shouldAnimate, tabAreaData );
 			}
@@ -678,15 +668,6 @@ window.SplitText = SplitText;
 			} = tabAreaData;
 			const duration = immediate ? 0 : transitionDuration;
 
-			// eslint-disable-next-line no-console
-			console.log( '[DEBUG] activateTab called:', {
-				tabId: tab.dataset.tabId,
-				immediate,
-				gsapEnabled,
-				currentTab: currentTab?.dataset.tabId || 'none',
-				gsapAnimateOnLoad: tabAreaData.gsapAnimateOnLoad,
-			} );
-
 			if ( currentTab === tab ) {
 				return; // Already active
 			}
@@ -719,15 +700,6 @@ window.SplitText = SplitText;
 				typeof gsap !== 'undefined' &&
 				typeof SplitText !== 'undefined';
 
-			// eslint-disable-next-line no-console
-			console.log( '[DEBUG] Animation decision:', {
-				gsapEnabled,
-				gsapAvailable,
-				immediate,
-				smoothHeight,
-				hasCurrentTab: !! currentTab,
-			} );
-
 			if ( gsapEnabled && ! gsapAvailable && ! immediate ) {
 				// Log warning only once per tab area
 				if ( ! tabAreaData.gsapWarningLogged ) {
@@ -744,8 +716,6 @@ window.SplitText = SplitText;
 				gsapAvailable &&
 				! immediate
 			) {
-				// eslint-disable-next-line no-console
-				console.log( '[DEBUG] Using GSAP animation path' );
 				if ( currentTab ) {
 					// Normal tab switch with both fade out and reveal
 					this.executeGSAPTransition( currentTab, tab, tabAreaData );
@@ -754,8 +724,6 @@ window.SplitText = SplitText;
 					this.executeInitialGSAPAnimation( tab, tabAreaData );
 				}
 			} else if ( smoothHeight && ! immediate && currentTab ) {
-				// eslint-disable-next-line no-console
-				console.log( '[DEBUG] Using smooth height transition path' );
 				// Smooth height transition
 				this.animateHeightTransition(
 					element,
@@ -766,19 +734,9 @@ window.SplitText = SplitText;
 					tabAreaData
 				);
 			} else {
-				// eslint-disable-next-line no-console
-				console.log( '[DEBUG] Using instant switch path - resetting all tabs' );
 				// Instant switch - rely on CSS classes for visibility
 				// Ensure text is in normal state (not split) for immediate display
 				tabs.forEach( ( t ) => {
-					// eslint-disable-next-line no-console
-					console.log( '[DEBUG] Processing tab:', {
-						tabId: t.dataset.tabId,
-						isActiveTab: t === tab,
-						hasTextSplitter: !! t.textSplitter,
-						hasTextSplitters: !! ( t.textSplitters && t.textSplitters.length ),
-					} );
-					
 					if ( t !== tab ) {
 						t.classList.remove( 'is-active' );
 						t.setAttribute( 'tabindex', '-1' ); // Remove from tab order
@@ -789,14 +747,6 @@ window.SplitText = SplitText;
 
 				tab.classList.add( 'is-active' );
 				tab.setAttribute( 'tabindex', '0' ); // Add to tab order
-
-				// eslint-disable-next-line no-console
-				console.log( '[DEBUG] Tab activated, checking final state:', {
-					tabId: tab.dataset.tabId,
-					innerHTML: tab.innerHTML.substring( 0, 200 ),
-					hasTextSplitter: !! tab.textSplitter,
-					hasTextSplitters: !! ( tab.textSplitters && tab.textSplitters.length ),
-				} );
 
 				tabAreaData.currentTab = tab;
 				tabAreaData.isTransitioning = false;
@@ -866,6 +816,81 @@ window.SplitText = SplitText;
 				if ( tabAreaData.isTransitioning ) {
 					cleanup();
 				}
+			}, duration + 50 );
+		}
+
+		applySmoothHeightTransition( areaElement, startHeight, endHeight, duration ) {
+
+			// Set starting height explicitly
+			areaElement.style.height = `${ startHeight }px`;
+			areaElement.style.overflow = 'hidden';
+			areaElement.style.transition = `height ${ duration }ms ease-in-out`;
+
+			// Force reflow
+			void areaElement.offsetHeight;
+
+			// Animate to target height
+			areaElement.style.height = `${ endHeight }px`;
+
+			// Clean up after transition
+			const cleanup = () => {
+				areaElement.style.height = '';
+				areaElement.style.overflow = '';
+				areaElement.style.transition = '';
+				areaElement.removeEventListener( 'transitionend', cleanup );
+			};
+
+			areaElement.addEventListener( 'transitionend', cleanup );
+
+			// Fallback cleanup in case transitionend doesn't fire
+			setTimeout( () => {
+				cleanup();
+			}, duration + 50 );
+		}
+
+		startSmoothHeightTransition( areaElement, fromTab, toTab, duration ) {
+
+			// Get current height (with fromTab visible)
+			const startHeight = areaElement.offsetHeight;
+
+			// Temporarily measure toTab height
+			// Both tabs are now visible, so we need to hide fromTab to measure toTab accurately
+			if ( fromTab ) {
+				fromTab.style.display = 'none';
+			}
+
+			// Measure target height with only toTab visible
+			const endHeight = areaElement.offsetHeight;
+
+			// Restore fromTab visibility for a moment (it will be hidden by CSS after)
+			if ( fromTab ) {
+				fromTab.style.display = '';
+			}
+
+			// Set starting height explicitly
+			areaElement.style.height = `${ startHeight }px`;
+			areaElement.style.overflow = 'hidden';
+			areaElement.style.transition = `height ${ duration }ms ease-in-out`;
+
+			// Force reflow
+			void areaElement.offsetHeight;
+
+			// Animate to target height
+			areaElement.style.height = `${ endHeight }px`;
+
+			// Clean up after transition
+			const cleanup = () => {
+				areaElement.style.height = '';
+				areaElement.style.overflow = '';
+				areaElement.style.transition = '';
+				areaElement.removeEventListener( 'transitionend', cleanup );
+			};
+
+			areaElement.addEventListener( 'transitionend', cleanup );
+
+			// Fallback cleanup in case transitionend doesn't fire
+			setTimeout( () => {
+				cleanup();
 			}, duration + 50 );
 		}
 
@@ -954,7 +979,29 @@ window.SplitText = SplitText;
 		 * @param {Object} tabAreaData - Tab area configuration data
 		 */
 		executeGSAPTransition( fromTab, toTab, tabAreaData ) {
-			const { gsapConfig, tabs } = tabAreaData;
+			const { gsapConfig, tabs, smoothHeight, transitionDuration, element } = tabAreaData;
+
+			// Measure heights BEFORE resetting elements if smooth height is enabled
+			let startHeight, endHeight;
+			if ( smoothHeight ) {
+				// Get current height with fromTab visible
+				startHeight = element.offsetHeight;
+				
+				// Temporarily show toTab to measure its height
+				const fromTabDisplay = fromTab.style.display;
+				const toTabDisplay = toTab.style.display;
+				
+				fromTab.style.display = 'none';
+				toTab.style.display = 'block';
+				toTab.classList.add( 'is-active' );
+				
+				endHeight = element.offsetHeight;
+				
+				// Restore original states
+				fromTab.style.display = fromTabDisplay;
+				toTab.style.display = toTabDisplay;
+				toTab.classList.remove( 'is-active' );
+			}
 
 			// Ensure clean state before starting new animations
 			// Kill any existing animations and reset both tabs
@@ -979,8 +1026,13 @@ window.SplitText = SplitText;
 				fromTab.classList.remove( 'is-active' );
 				fromTab.setAttribute( 'tabindex', '-1' );
 
-				// Now make the incoming tab visible and execute onLeave animation
+				// Now make the incoming tab visible
 				toTab.classList.add( 'is-active' );
+				
+				// Apply smooth height transition if enabled using pre-measured heights
+				if ( smoothHeight && startHeight && endHeight ) {
+					this.applySmoothHeightTransition( element, startHeight, endHeight, transitionDuration );
+				}
 				
 				// Now execute onLeave animation on incoming tab
 				const onLeaveSuccess = this.gsapOnLeave( toTab, gsapConfig, () => {
@@ -1081,21 +1133,10 @@ window.SplitText = SplitText;
 		 * @param {HTMLElement} target - The element to reset
 		 */
 		resetElement( target ) {
-			// eslint-disable-next-line no-console
-			console.log( '[DEBUG] resetElement called:', {
-				tabId: target.dataset?.tabId,
-				hasTextSplitter: !! target.textSplitter,
-				hasTextSplitters: !! ( target.textSplitters && target.textSplitters.length ),
-				textSplittersCount: target.textSplitters?.length || 0,
-				hasBeenAnimated: !! target.hasBeenAnimated,
-			} );
-
 			let hadSplitters = false;
 
 			// Clean up text splitter if it exists
 			if ( target.textSplitter ) {
-				// eslint-disable-next-line no-console
-				console.log( '[DEBUG] Reverting single textSplitter' );
 				target.textSplitter.revert();
 				target.textSplitter = null;
 				hadSplitters = true;
@@ -1103,12 +1144,8 @@ window.SplitText = SplitText;
 
 			// Clean up multiple text splitters if they exist
 			if ( target.textSplitters && Array.isArray( target.textSplitters ) && target.textSplitters.length > 0 ) {
-				// eslint-disable-next-line no-console
-				console.log( '[DEBUG] Reverting multiple textSplitters:', target.textSplitters.length );
 				target.textSplitters.forEach( ( splitter, index ) => {
 					if ( splitter ) {
-						// eslint-disable-next-line no-console
-						console.log( '[DEBUG] Reverting splitter', index );
 						splitter.revert();
 					}
 				} );
@@ -1119,20 +1156,12 @@ window.SplitText = SplitText;
 			// Only clear GSAP properties if this element has actually been animated
 			// This prevents clearing CSS on elements that were never touched by GSAP
 			if ( typeof gsap !== 'undefined' && ( hadSplitters || target.hasBeenAnimated ) ) {
-				// eslint-disable-next-line no-console
-				console.log( '[DEBUG] Clearing GSAP properties (element was animated)' );
 				gsap.set( target, { clearProps: 'all' } );
 				target.hasBeenAnimated = false;
 			} else {
-				// eslint-disable-next-line no-console
-				console.log( '[DEBUG] Skipping GSAP clearProps (element was never animated)' );
-			}
+				}
 
-			// eslint-disable-next-line no-console
-			console.log( '[DEBUG] resetElement complete, checking innerHTML:', {
-				innerHTML: target.innerHTML.substring( 0, 200 ),
-			} );
-		}
+			}
 
 		/**
 		 * Apply proper CSS to character divs for natural text wrapping
@@ -1314,14 +1343,6 @@ window.SplitText = SplitText;
 		 * @return {boolean} True if animation started successfully, false if it failed
 		 */
 		gsapOnLeave( target, config, onComplete ) {
-			// eslint-disable-next-line no-console
-			console.log( '[DEBUG] gsapOnLeave called:', {
-				tabId: target.dataset?.tabId,
-				hasContent: !! ( target.textContent && target.textContent.trim() ),
-				splitChildren: config.splitChildren,
-				splitLines: config.splitLines,
-			} );
-
 			// Check for valid tab content before animating
 			if ( ! target || ! target.textContent || ! target.textContent.trim() ) {
 				// eslint-disable-next-line no-console
