@@ -183,6 +183,24 @@ window.SplitText = SplitText;
       return directTabs;
     }
 
+    isTabAreaVisible(area) {
+      // Check if a tab area is currently visible (not inside an inactive parent tab)
+      let currentElement = area.parentElement;
+
+      while (currentElement) {
+        // Check if this element is a tab content
+        if (currentElement.classList.contains('decoupled-tabs-content')) {
+          // If it's not active, the nested area is hidden
+          if (!currentElement.classList.contains('is-active')) {
+            return false;
+          }
+        }
+        currentElement = currentElement.parentElement;
+      }
+
+      return true;
+    }
+
     resolveMultipleActiveTabs() {
       // Handle multiple active tabs with priority: hash > trigger > default > first
       // Process each tab area independently
@@ -202,10 +220,13 @@ window.SplitText = SplitText;
 
           let selectedTab = null;
 
-          // Priority 1: URL hash
+          // Priority 1: URL hash (support comma-separated list)
           const hash = window.location.hash.slice(1);
           if (hash) {
-            selectedTab = tabs.find((tab) => tab.dataset.tabId === hash);
+            const tabIds = hash.split(',').map((id) => id.trim());
+            selectedTab = tabs.find((tab) =>
+              tabIds.includes(tab.dataset.tabId),
+            );
           }
 
           // Priority 2: Active trigger (data-active-on-load="true")
@@ -260,12 +281,58 @@ window.SplitText = SplitText;
       });
 
       // Also handle triggers marked as active on load
+      // BUT: Skip if URL hash is present - hash takes priority
+      const hash = window.location.hash.slice(1);
+      const hashTabIds = hash ? hash.split(',').map((id) => id.trim()) : [];
+
+      // If hash is present, we need to check if any triggers in the same group/area
+      // should be prevented from activating
+      const shouldSkipTrigger = (trigger) => {
+        const tabId = trigger.dataset.tabTarget;
+        const tabAreaId = trigger.dataset.tabArea || null;
+        const groupId = trigger.dataset.groupId;
+
+        // If this trigger's target is in the hash, skip it
+        if (hashTabIds.includes(tabId)) {
+          return true;
+        }
+
+        // If hash is present and this trigger has a group ID,
+        // check if any other trigger in the same group targets a hash tab
+        if (hashTabIds.length > 0 && groupId) {
+          const groupTriggers = document.querySelectorAll(
+            `[data-group-id="${groupId}"]`,
+          );
+          const hasHashConflict = Array.from(groupTriggers).some((t) => {
+            const tTabArea = t.dataset.tabArea || null;
+            const tTabId = t.dataset.tabTarget;
+            // Check if same area and target is in hash
+            return tTabArea === tabAreaId && hashTabIds.includes(tTabId);
+          });
+
+          if (hasHashConflict) {
+            // eslint-disable-next-line no-console
+            console.log(
+              `Decoupled Tabs: Skipping active-on-load for trigger targeting "${tabId}" because another trigger in group "${groupId}" targets a hash tab.`,
+            );
+            return true;
+          }
+        }
+
+        return false;
+      };
+
       const activeOnLoadTriggers = document.querySelectorAll(
         '[data-tab-target][data-active-on-load="true"]',
       );
       activeOnLoadTriggers.forEach((trigger) => {
         const tabId = trigger.dataset.tabTarget;
         const tabAreaId = trigger.dataset.tabArea || null;
+
+        // Skip this trigger if hash takes priority
+        if (shouldSkipTrigger(trigger)) {
+          return;
+        }
 
         // Apply active state to this trigger
         trigger.classList.add('is-active');
@@ -459,6 +526,7 @@ window.SplitText = SplitText;
           targetTabArea,
           groupId,
           currentlyActive: trigger.classList.contains('is-active'),
+          triggerElement: trigger,
         });
 
         // Handle group logic: deactivate other triggers in the same group
@@ -615,7 +683,17 @@ window.SplitText = SplitText;
         for (const [areaId, area] of this.tabAreas) {
           const found = area.tabs.find((tab) => tab.dataset.tabId === tabId);
           if (found) {
-            matchingTabs.push({ tab: found, area, areaId });
+            // Check if this area is currently visible
+            const isVisible = this.isTabAreaVisible(area.element);
+            matchingTabs.push({ tab: found, area, areaId, isVisible });
+
+            if (!isVisible) {
+              // eslint-disable-next-line no-console
+              console.log(
+                '[Switch Tab] Area is hidden, will skip animations:',
+                areaId,
+              );
+            }
           }
         }
 
@@ -626,17 +704,17 @@ window.SplitText = SplitText;
         }
 
         // Switch all matching tabs simultaneously
-        // Allow interruption - animations will be killed and restarted in activateTab
-        matchingTabs.forEach(({ tab, area, areaId }) => {
-          this.activateTab(tab, false, area);
+        // For hidden nested areas, use immediate mode to skip animations
+        matchingTabs.forEach(({ tab, area, areaId, isVisible }) => {
+          this.activateTab(tab, !isVisible, area);
         });
 
         // Update trigger states for all areas (pass null to update all)
         this.updateTriggerStates(tabId, null);
 
-        // Update URL hash
+        // Update URL hash with all active tabs
         if (trigger) {
-          window.history.replaceState(null, '', `#${tabId}`);
+          this.updateUrlHash();
         }
 
         return;
@@ -669,9 +747,9 @@ window.SplitText = SplitText;
       // Perform the switch
       this.activateTab(targetTab, false, tabArea);
 
-      // Update URL hash
+      // Update URL hash with all active tabs
       if (trigger) {
-        window.history.replaceState(null, '', `#${tabId}`);
+        this.updateUrlHash();
       }
     }
 
@@ -696,6 +774,15 @@ window.SplitText = SplitText;
         gsapEnabled,
       } = tabAreaData;
       const duration = immediate ? 0 : transitionDuration;
+
+      // Debug: Log tab activation
+      // eslint-disable-next-line no-console
+      console.log('[Activate Tab]', {
+        tabId: tab.dataset.tabId,
+        areaId: element.dataset.tabAreaId,
+        immediate,
+        isAlreadyActive: currentTab === tab,
+      });
 
       if (currentTab === tab) {
         return; // Already active
@@ -763,11 +850,25 @@ window.SplitText = SplitText;
           if (t !== tab) {
             t.classList.remove('is-active');
             t.setAttribute('tabindex', '-1'); // Remove from tab order
+            // Only reset GSAP state if the tab area is currently visible
+            // Resetting hidden elements can corrupt their DOM/styles
+            if (!immediate) {
+              this.resetElement(t);
+            }
           }
         });
 
         tab.classList.add('is-active');
         tab.setAttribute('tabindex', '0'); // Add to tab order
+
+        // Debug: Log instant switch
+        // eslint-disable-next-line no-console
+        console.log('[Activate Tab] Instant switch complete:', {
+          tabId: tab.dataset.tabId,
+          areaId: element.dataset.tabAreaId,
+          hasActiveClass: tab.classList.contains('is-active'),
+          resetInactiveTabs: true,
+        });
 
         tabAreaData.isTransitioning = false;
       }
@@ -955,10 +1056,44 @@ window.SplitText = SplitText;
       });
     }
 
+    /**
+     * Get all currently active tab IDs across all tab areas
+     * @return {Array} Array of active tab IDs
+     */
+    getAllActiveTabIds() {
+      const activeIds = [];
+      this.tabAreas.forEach((tabAreaData) => {
+        if (tabAreaData.currentTab) {
+          const tabId = tabAreaData.currentTab.dataset.tabId;
+          if (tabId && !activeIds.includes(tabId)) {
+            activeIds.push(tabId);
+          }
+        }
+      });
+      return activeIds;
+    }
+
+    /**
+     * Update URL hash with all currently active tab IDs
+     * Writes comma-separated list of tab IDs (e.g., #tab-1,tab-p)
+     */
+    updateUrlHash() {
+      const activeIds = this.getAllActiveTabIds();
+      if (activeIds.length > 0) {
+        window.history.replaceState(null, '', `#${activeIds.join(',')}`);
+      }
+    }
+
     handleHashChange() {
       const hash = window.location.hash.slice(1);
       if (hash) {
-        this.switchToTab(hash);
+        // Support multiple tab IDs separated by commas (e.g., #tab-1,tab-p)
+        const tabIds = hash.split(',').map((id) => id.trim());
+        tabIds.forEach((tabId) => {
+          if (tabId) {
+            this.switchToTab(tabId);
+          }
+        });
       }
     }
 
@@ -1152,6 +1287,67 @@ window.SplitText = SplitText;
         // Mark transition as complete
         tabAreaData.isTransitioning = false;
       }
+
+      // After parent tab switch, ensure nested tab areas are in a clean state
+      // Nested active tab content may have stale GSAP artifacts (autoAlpha, visibility, etc.)
+      this.refreshNestedTabAreas(toTab);
+    }
+
+    /**
+     * Refresh nested tab areas inside a tab content element
+     * Ensures the active tab content in each nested area is visible and clean
+     * Called after a parent tab switch completes
+     * @param {HTMLElement} parentTab - The newly active parent tab content
+     */
+    refreshNestedTabAreas(parentTab) {
+      const nestedAreas = parentTab.querySelectorAll('.decoupled-tabs-area');
+      nestedAreas.forEach((area) => {
+        const areaId = area.dataset.tabAreaId;
+        const tabAreaData = this.tabAreas.get(areaId);
+        if (!tabAreaData) return;
+
+        // Kill any in-progress animations on all tabs in this nested area
+        tabAreaData.tabs.forEach((tab) => {
+          if (tab.currentTween) {
+            tab.currentTween.kill();
+            tab.currentTween = null;
+          }
+          // Revert any active SplitText instances
+          if (tab.textSplitter) {
+            const nestedForRevert = this.detachNestedTabAreas(tab);
+            tab.textSplitter.revert();
+            tab.textSplitter = null;
+            this.reattachNestedTabAreas(tab, nestedForRevert);
+          }
+        });
+        tabAreaData.isTransitioning = false;
+
+        // Find the active tab content in this nested area
+        const activeTab = tabAreaData.currentTab;
+        if (activeTab) {
+          // Ensure it has the active class
+          activeTab.classList.add('is-active');
+          // Clear any stale GSAP inline styles on the tab and all its descendants
+          if (typeof gsap !== 'undefined') {
+            gsap.set(activeTab, { clearProps: 'all' });
+            // Also clear any GSAP-wrapped elements inside (chars, lines, etc.)
+            const gsapElements = activeTab.querySelectorAll(
+              '[style*="visibility"], [style*="opacity"]',
+            );
+            gsapElements.forEach((el) => {
+              // Skip nested tab areas inside this tab
+              if (
+                !el.closest('.decoupled-tabs-area') ||
+                el.closest('.decoupled-tabs-area') === area
+              ) {
+                gsap.set(el, { clearProps: 'all' });
+              }
+            });
+          }
+          activeTab.style.visibility = '';
+          activeTab.style.opacity = '';
+        }
+      });
     }
 
     /**
@@ -1185,14 +1381,81 @@ window.SplitText = SplitText;
     }
 
     /**
+     * Detach nested tab areas from a target element before SplitText runs.
+     * Replaces each nested area with a placeholder comment node to preserve position.
+     * @param {HTMLElement} target - The tab content element
+     * @return {Array} Array of {placeholder, element} pairs for reattachment
+     */
+    detachNestedTabAreas(target) {
+      const nestedAreas = Array.from(
+        target.querySelectorAll('.decoupled-tabs-area'),
+      );
+      const detached = [];
+
+      nestedAreas.forEach((area) => {
+        // Only detach if it's actually inside this target (not already detached)
+        if (target.contains(area)) {
+          const placeholder = document.createElement('div');
+          placeholder.setAttribute(
+            'data-nested-placeholder',
+            area.dataset.tabAreaId || 'true',
+          );
+          placeholder.style.display = 'none';
+          area.parentNode.insertBefore(placeholder, area);
+          area.parentNode.removeChild(area);
+          detached.push({ placeholder, element: area });
+        }
+      });
+
+      if (detached.length > 0) {
+        // eslint-disable-next-line no-console
+        console.log(
+          '[Nested Protection] Detached nested tab areas:',
+          detached.length,
+        );
+      }
+
+      return detached;
+    }
+
+    /**
+     * Reattach nested tab areas after SplitText has been applied.
+     * Replaces placeholder nodes with the original nested area elements.
+     * @param {HTMLElement} target - The tab content element
+     * @param {Array} detached - Array of {placeholder, element} pairs from detachNestedTabAreas
+     */
+    reattachNestedTabAreas(target, detached) {
+      detached.forEach(({ placeholder, element }) => {
+        if (placeholder.parentNode) {
+          placeholder.parentNode.insertBefore(element, placeholder);
+          placeholder.parentNode.removeChild(placeholder);
+        }
+      });
+
+      if (detached.length > 0) {
+        // eslint-disable-next-line no-console
+        console.log(
+          '[Nested Protection] Reattached nested tab areas:',
+          detached.length,
+        );
+      }
+    }
+
+    /**
      * Reset element animation state and clean up GSAP properties
      * @param {HTMLElement} target - The element to reset
      */
     resetElement(target) {
       // Clean up text splitter if it exists
       if (target.textSplitter) {
+        // CRITICAL: Detach nested tab areas before SplitText revert
+        // SplitText.revert() restores the DOM to its state when SplitText was created.
+        // Since nested areas were detached before SplitText creation, revert would
+        // restore placeholder divs and remove the reattached nested areas.
+        const nestedAreas = this.detachNestedTabAreas(target);
         target.textSplitter.revert();
         target.textSplitter = null;
+        this.reattachNestedTabAreas(target, nestedAreas);
       }
 
       // Restore properties that were modified during animation
@@ -1209,6 +1472,8 @@ window.SplitText = SplitText;
 
       // Restore child element heights that were locked during animation
       Array.from(target.children).forEach((child) => {
+        // Skip nested tab areas - they manage their own styles
+        if (child.classList.contains('decoupled-tabs-area')) return;
         if (child.style.height && child.style.height.endsWith('px')) {
           child.style.height = '';
         }
@@ -1259,11 +1524,19 @@ window.SplitText = SplitText;
           splitType = 'chars,lines';
         }
 
+        // CRITICAL: Protect nested tab areas from SplitText DOM manipulation
+        // SplitText wraps ALL text in divs, which destroys nested tab area structure
+        const nestedAreas = this.detachNestedTabAreas(target);
+
         // Wrap text splitting in try-catch
         // If splitChildren is enabled, split each child element separately
         if (config.splitChildren) {
-          // Get direct children of the target
-          const children = Array.from(target.children);
+          // Get direct children of the target, excluding nested tab area placeholders
+          const children = Array.from(target.children).filter(
+            (child) =>
+              !child.classList.contains('decoupled-tabs-area') &&
+              !child.hasAttribute('data-nested-placeholder'),
+          );
 
           if (children.length === 0) {
             // No children, split the target itself
@@ -1276,6 +1549,9 @@ window.SplitText = SplitText;
           // Split the entire target as one block
           target.textSplitter = new SplitText(target, { type: splitType });
         }
+
+        // Reattach nested tab areas after SplitText is done
+        this.reattachNestedTabAreas(target, nestedAreas);
 
         // Animate characters to opacity 0 with stagger from end
         const chars = target.textSplitter.chars;
@@ -1388,12 +1664,18 @@ window.SplitText = SplitText;
           splitType = 'chars,lines';
         }
 
+        // CRITICAL: Protect nested tab areas from SplitText DOM manipulation
+        // SplitText wraps ALL text in divs, which destroys nested tab area structure
+        const nestedAreas = this.detachNestedTabAreas(target);
+
         // Create new SplitText instance for the incoming tab
         // CRITICAL: Measure and store child heights BEFORE SplitText modifies the DOM
         // SplitText wraps text in divs which changes layout, especially with splitLines enabled
         // Use getBoundingClientRect for precise sub-pixel measurements
         const childHeights = new Map();
         Array.from(target.children).forEach((child) => {
+          // Skip placeholders for nested tab areas
+          if (child.hasAttribute('data-nested-placeholder')) return;
           // getBoundingClientRect gives precise fractional heights (e.g., 118.125px)
           // offsetHeight rounds to integers which causes visual jumps
           childHeights.set(child, child.getBoundingClientRect().height);
@@ -1401,8 +1683,12 @@ window.SplitText = SplitText;
 
         // If splitChildren is enabled, split each child element separately
         if (config.splitChildren) {
-          // Get direct children of the target
-          const children = Array.from(target.children);
+          // Get direct children of the target, excluding nested tab area placeholders
+          const children = Array.from(target.children).filter(
+            (child) =>
+              !child.classList.contains('decoupled-tabs-area') &&
+              !child.hasAttribute('data-nested-placeholder'),
+          );
 
           // eslint-disable-next-line no-console
           console.log('[gsapOnLeave] Splitting children:', children.length);
@@ -1420,6 +1706,9 @@ window.SplitText = SplitText;
           // Split the entire target as one block
           target.textSplitter = new SplitText(target, { type: splitType });
         }
+
+        // Reattach nested tab areas after SplitText is done
+        this.reattachNestedTabAreas(target, nestedAreas);
 
         // Get the character array from the text splitter
         const chars = target.textSplitter.chars;
@@ -1447,6 +1736,8 @@ window.SplitText = SplitText;
         const originalHeight = target.style.height;
         const childOriginalStyles = new Map();
         Array.from(target.children).forEach((child) => {
+          // Skip nested tab areas - they manage their own layout
+          if (child.classList.contains('decoupled-tabs-area')) return;
           const storedHeight = childHeights.get(child);
           if (storedHeight && !child.style.height) {
             // Store original styles for restoration
@@ -1494,9 +1785,12 @@ window.SplitText = SplitText;
 
             // CRITICAL: Revert SplitText FIRST to restore original DOM structure
             // This removes all wrapper divs and returns text to its natural state
+            // Protect nested tab areas during revert (same reason as in resetElement)
             if (target.textSplitter) {
+              const nestedForRevert = this.detachNestedTabAreas(target);
               target.textSplitter.revert();
               target.textSplitter = null;
+              this.reattachNestedTabAreas(target, nestedForRevert);
             }
 
             // Use requestAnimationFrame to restore styles AFTER browser completes reflow
