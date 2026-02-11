@@ -67,7 +67,7 @@ export default function Edit({ attributes, setAttributes, clientId }) {
           <TextControl
             label={__('Tab Label', 'decoupled-tabs')}
             help={__(
-              'Display label for this tab in the editor.',
+              'Display label for this tab in the editor. You can nest Tab Areas inside this content.',
               'decoupled-tabs',
             )}
             value={tabLabel}

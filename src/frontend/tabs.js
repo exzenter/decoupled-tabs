@@ -167,6 +167,22 @@ window.SplitText = SplitText;
       }-auto-${timestamp}-${random}-${index}`;
     }
 
+    getDirectTabChildren(area) {
+      // Get only direct tab content children, excluding nested tab areas' content
+      const allTabs = Array.from(
+        area.querySelectorAll('.decoupled-tabs-content'),
+      );
+
+      const directTabs = allTabs.filter((tab) => {
+        // Find the closest parent tab area
+        const parentArea = tab.closest('.decoupled-tabs-area');
+        // Only include if this area is the direct parent
+        return parentArea === area;
+      });
+
+      return directTabs;
+    }
+
     resolveMultipleActiveTabs() {
       // Handle multiple active tabs with priority: hash > trigger > default > first
       // Process each tab area independently
@@ -366,7 +382,8 @@ window.SplitText = SplitText;
       const transitionDuration =
         parseInt(area.dataset.transitionDuration, 10) || 300;
 
-      const tabs = Array.from(area.querySelectorAll('.decoupled-tabs-content'));
+      // Only get direct tab content children, not nested ones
+      const tabs = this.getDirectTabChildren(area);
 
       // Read GSAP configuration from data attributes
       // Note: We don't check GSAP availability here - we'll check at animation time
@@ -399,19 +416,6 @@ window.SplitText = SplitText;
         splitChildren: area.dataset.gsapSplitChildren === 'true',
         splitLines: area.dataset.gsapSplitLines === 'true',
       };
-
-      // Debug: Log GSAP configuration
-      // eslint-disable-next-line no-console
-      console.log('[initTabArea] GSAP Config:', {
-        areaId,
-        gsapEnabled,
-        splitChildren: gsapConfig.splitChildren,
-        splitLines: gsapConfig.splitLines,
-        dataAttributes: {
-          gsapSplitChildren: area.dataset.gsapSplitChildren,
-          gsapSplitLines: area.dataset.gsapSplitLines,
-        },
-      });
 
       this.tabAreas.set(areaId, {
         element: area,
@@ -447,6 +451,15 @@ window.SplitText = SplitText;
         const targetId = trigger.dataset.tabTarget;
         const targetTabArea = trigger.dataset.tabArea; // Optional: specify which tab area
         const groupId = trigger.dataset.groupId; // Optional: group ID for connected triggers
+
+        // Debug: Log trigger click
+        // eslint-disable-next-line no-console
+        console.log('[Trigger Click]', {
+          targetId,
+          targetTabArea,
+          groupId,
+          currentlyActive: trigger.classList.contains('is-active'),
+        });
 
         // Handle group logic: deactivate other triggers in the same group
         if (groupId) {
@@ -502,17 +515,47 @@ window.SplitText = SplitText;
 
     /**
      * Deactivate all triggers in the same group except the current one
+     * Only affects triggers in the same tab area (or no tab area) AND same group
      * @param {string} groupId - The group ID to target
      * @param {HTMLElement} currentTrigger - The trigger that was just activated
      */
     deactivateGroupTriggers(groupId, currentTrigger) {
+      // Get the tab area of the current trigger
+      const currentTabArea = currentTrigger.dataset.tabArea || null;
+
       // Find all triggers with the same group ID
       const groupTriggers = document.querySelectorAll(
         `[data-group-id="${groupId}"]`,
       );
 
+      // Debug: Log group deactivation
+      // eslint-disable-next-line no-console
+      console.log('[Group Deactivation]', {
+        groupId,
+        currentTabArea,
+        currentTarget: currentTrigger.dataset.tabTarget,
+        totalTriggersInGroup: groupTriggers.length,
+      });
+
       groupTriggers.forEach((trigger) => {
-        if (trigger !== currentTrigger) {
+        // Only deactivate triggers in the same tab area (or both have no tab area)
+        const triggerTabArea = trigger.dataset.tabArea || null;
+        const triggerGroupId = trigger.dataset.groupId;
+
+        // Must be: different trigger, same tab area, same group
+        if (
+          trigger !== currentTrigger &&
+          triggerTabArea === currentTabArea &&
+          triggerGroupId === groupId
+        ) {
+          // Debug: Log deactivation
+          // eslint-disable-next-line no-console
+          console.log('[Group Deactivation] Deactivating trigger:', {
+            target: trigger.dataset.tabTarget,
+            area: triggerTabArea,
+            group: triggerGroupId,
+          });
+
           // Remove active state
           trigger.classList.remove('is-active');
           trigger.setAttribute('aria-selected', 'false');
@@ -561,6 +604,10 @@ window.SplitText = SplitText;
     }
 
     switchToTab(tabId, tabAreaId = null, trigger = null) {
+      // Debug: Log tab switch
+      // eslint-disable-next-line no-console
+      console.log('[Switch Tab]', { tabId, tabAreaId, hasTrigger: !!trigger });
+
       // If no specific tab area is provided, target all tabs with the same ID
       if (!tabAreaId) {
         // Find all tabs with matching ID across all tab areas
@@ -829,8 +876,12 @@ window.SplitText = SplitText;
     }
 
     updateTriggerStates(activeTabId, tabAreaId = null) {
+      // Debug: Log trigger state update
+      // eslint-disable-next-line no-console
+      console.log('[Update Trigger States]', { activeTabId, tabAreaId });
+
       document.querySelectorAll('[data-tab-target]').forEach((trigger) => {
-        const triggerTabArea = trigger.dataset.tabArea;
+        const triggerTabArea = trigger.dataset.tabArea || null;
         const triggerTabId = trigger.dataset.tabTarget;
         const groupId = trigger.dataset.groupId;
 
@@ -839,15 +890,25 @@ window.SplitText = SplitText;
         if (tabAreaId === null) {
           // Update triggers that match the tab ID
           if (triggerTabId === activeTabId) {
+            // eslint-disable-next-line no-console
+            console.log(
+              '[Update Trigger States] Activating (no area filter):',
+              {
+                target: triggerTabId,
+                area: triggerTabArea,
+                group: groupId,
+              },
+            );
+
             trigger.classList.add('is-active');
             trigger.setAttribute('aria-selected', 'true');
             this.applyTriggerCSS(trigger, 'active');
 
-            // If this trigger has a group ID, deactivate other triggers in the group
-            if (groupId) {
-              this.deactivateGroupTriggers(groupId, trigger);
-            }
-          } else {
+            // DON'T call deactivateGroupTriggers here when tabAreaId is null
+            // This allows multiple groups to have active triggers simultaneously
+            // Group deactivation should only happen when explicitly clicking a trigger
+          } else if (!triggerTabArea && !groupId) {
+            // Only deactivate triggers without a specific tab area AND without a group
             trigger.classList.remove('is-active');
             trigger.setAttribute('aria-selected', 'false');
             this.applyTriggerCSS(trigger, 'default');
@@ -856,11 +917,19 @@ window.SplitText = SplitText;
         }
 
         // If tab area is specified, only update triggers for that area
-        if (triggerTabArea && triggerTabArea !== tabAreaId) {
+        // Skip triggers that belong to a different tab area
+        if (triggerTabArea !== tabAreaId) {
           return;
         }
 
         if (triggerTabId === activeTabId) {
+          // eslint-disable-next-line no-console
+          console.log('[Update Trigger States] Activating:', {
+            target: triggerTabId,
+            area: triggerTabArea,
+            group: groupId,
+          });
+
           trigger.classList.add('is-active');
           trigger.setAttribute('aria-selected', 'true');
           // Apply active CSS
@@ -871,6 +940,13 @@ window.SplitText = SplitText;
             this.deactivateGroupTriggers(groupId, trigger);
           }
         } else {
+          // Only deactivate if in the same tab area
+          // eslint-disable-next-line no-console
+          console.log('[Update Trigger States] Deactivating:', {
+            target: triggerTabId,
+            area: triggerTabArea,
+          });
+
           trigger.classList.remove('is-active');
           trigger.setAttribute('aria-selected', 'false');
           // Apply default CSS
@@ -1183,22 +1259,11 @@ window.SplitText = SplitText;
           splitType = 'chars,lines';
         }
 
-        // eslint-disable-next-line no-console
-        console.log('[gsapOnEnter] Config:', {
-          splitChildren: config.splitChildren,
-          splitLines: config.splitLines,
-          splitType,
-          targetChildren: target.children.length,
-        });
-
         // Wrap text splitting in try-catch
         // If splitChildren is enabled, split each child element separately
         if (config.splitChildren) {
           // Get direct children of the target
           const children = Array.from(target.children);
-
-          // eslint-disable-next-line no-console
-          console.log('[gsapOnEnter] Splitting children:', children.length);
 
           if (children.length === 0) {
             // No children, split the target itself
@@ -1208,8 +1273,6 @@ window.SplitText = SplitText;
             target.textSplitter = new SplitText(children, { type: splitType });
           }
         } else {
-          // eslint-disable-next-line no-console
-          console.log('[gsapOnEnter] Splitting entire target as one block');
           // Split the entire target as one block
           target.textSplitter = new SplitText(target, { type: splitType });
         }
@@ -1218,19 +1281,8 @@ window.SplitText = SplitText;
         const chars = target.textSplitter.chars;
         const lines = target.textSplitter.lines || [];
 
-        // eslint-disable-next-line no-console
-        console.log(
-          '[gsapOnEnter] Chars:',
-          chars.length,
-          'Lines:',
-          lines.length,
-        );
-
         // If splitLines is enabled and we have lines, animate each line independently
         if (config.splitLines && lines.length > 0) {
-          // eslint-disable-next-line no-console
-          console.log('[gsapOnEnter] Animating lines independently (fade out)');
-
           // Create a timeline to coordinate all line animations
           const tl = gsap.timeline({
             onComplete: () => {
@@ -1336,18 +1388,7 @@ window.SplitText = SplitText;
           splitType = 'chars,lines';
         }
 
-        // eslint-disable-next-line no-console
-        console.log('[gsapOnLeave] Config:', {
-          splitChildren: config.splitChildren,
-          splitLines: config.splitLines,
-          splitType,
-          targetChildren: target.children.length,
-        });
-
         // Create new SplitText instance for the incoming tab
-        // eslint-disable-next-line no-console
-        console.log('[gsapOnLeave] Creating SplitText for target');
-
         // CRITICAL: Measure and store child heights BEFORE SplitText modifies the DOM
         // SplitText wraps text in divs which changes layout, especially with splitLines enabled
         // Use getBoundingClientRect for precise sub-pixel measurements

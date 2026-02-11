@@ -1,0 +1,332 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Nested Tab Areas Test</title>
+    <link rel="stylesheet" href="build/frontend/tabs.css" />
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        max-width: 1200px;
+        margin: 40px auto;
+        padding: 20px;
+      }
+
+      .decoupled-tabs-area {
+        border: 2px solid #333;
+        padding: 20px;
+        margin: 20px 0;
+        background: #f5f5f5;
+      }
+
+      .trigger-group {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 20px;
+      }
+
+      .tab-trigger {
+        padding: 10px 20px;
+        background: #e0e0e0;
+        border: 2px solid #999;
+        cursor: pointer;
+        transition: all 0.3s;
+      }
+
+      .tab-trigger:hover {
+        background: #d0d0d0;
+      }
+
+      .tab-trigger.is-active {
+        background: #4caf50;
+        color: white;
+        border-color: #45a049;
+      }
+
+      .nested-indicator {
+        background: #fff3cd;
+        padding: 10px;
+        margin: 10px 0;
+        border-left: 4px solid #ffc107;
+      }
+
+      h2 {
+        margin-top: 0;
+      }
+
+      .debug-info {
+        background: #f0f0f0;
+        padding: 10px;
+        margin: 10px 0;
+        font-family: monospace;
+        font-size: 12px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Nested Tab Areas Test</h1>
+    <p>
+      This test demonstrates nested tab areas working independently with group
+      IDs.
+    </p>
+
+    <!-- Outer Tab Area Triggers -->
+    <div class="trigger-group">
+      <div
+        class="tab-trigger"
+        data-tab-target="outer-tab-1"
+        data-tab-area="outer-area"
+        data-group-id="outer-group"
+      >
+        Outer Tab 1
+      </div>
+      <div
+        class="tab-trigger"
+        data-tab-target="outer-tab-2"
+        data-tab-area="outer-area"
+        data-group-id="outer-group"
+      >
+        Outer Tab 2
+      </div>
+      <div
+        class="tab-trigger"
+        data-tab-target="outer-tab-3"
+        data-tab-area="outer-area"
+        data-group-id="outer-group"
+      >
+        Outer Tab 3
+      </div>
+    </div>
+
+    <!-- Outer Tab Area -->
+    <div
+      class="decoupled-tabs-area"
+      data-tab-area-id="outer-area"
+      data-smooth-height="false"
+      data-gsap-enabled="false"
+    >
+      <!-- Outer Tab 1 -->
+      <div
+        class="decoupled-tabs-content is-active"
+        data-tab-id="outer-tab-1"
+        role="tabpanel"
+        id="tab-panel-outer-tab-1"
+      >
+        <h2>Outer Tab 1</h2>
+        <p>This is the first tab of the outer tab area.</p>
+        <div class="nested-indicator">
+          <strong>Nested Tab Area Below:</strong> This tab contains a nested tab
+          area with its own independent tabs.
+        </div>
+
+        <!-- Inner Tab Area Triggers -->
+        <div class="trigger-group">
+          <div
+            class="tab-trigger"
+            data-tab-target="inner-1-tab-a"
+            data-tab-area="inner-area-1"
+            data-group-id="inner-group-1"
+          >
+            Inner A
+          </div>
+          <div
+            class="tab-trigger"
+            data-tab-target="inner-1-tab-b"
+            data-tab-area="inner-area-1"
+            data-group-id="inner-group-1"
+          >
+            Inner B
+          </div>
+          <div
+            class="tab-trigger"
+            data-tab-target="inner-1-tab-c"
+            data-tab-area="inner-area-1"
+            data-group-id="inner-group-1"
+          >
+            Inner C
+          </div>
+        </div>
+
+        <!-- Nested Tab Area 1 -->
+        <div
+          class="decoupled-tabs-area"
+          data-tab-area-id="inner-area-1"
+          data-smooth-height="false"
+          data-gsap-enabled="false"
+          style="background: #e3f2fd; border-color: #2196f3"
+        >
+          <div
+            class="decoupled-tabs-content is-active"
+            data-tab-id="inner-1-tab-a"
+            role="tabpanel"
+            id="tab-panel-inner-1-tab-a"
+          >
+            <h3>Inner Tab A</h3>
+            <p>This is tab A of the nested tab area inside Outer Tab 1.</p>
+            <div class="debug-info">
+              Tab ID: inner-1-tab-a | Area: inner-area-1
+            </div>
+          </div>
+
+          <div
+            class="decoupled-tabs-content"
+            data-tab-id="inner-1-tab-b"
+            role="tabpanel"
+            id="tab-panel-inner-1-tab-b"
+          >
+            <h3>Inner Tab B</h3>
+            <p>This is tab B of the nested tab area inside Outer Tab 1.</p>
+            <div class="debug-info">
+              Tab ID: inner-1-tab-b | Area: inner-area-1
+            </div>
+          </div>
+
+          <div
+            class="decoupled-tabs-content"
+            data-tab-id="inner-1-tab-c"
+            role="tabpanel"
+            id="tab-panel-inner-1-tab-c"
+          >
+            <h3>Inner Tab C</h3>
+            <p>This is tab C of the nested tab area inside Outer Tab 1.</p>
+            <div class="debug-info">
+              Tab ID: inner-1-tab-c | Area: inner-area-1
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Outer Tab 2 -->
+      <div
+        class="decoupled-tabs-content"
+        data-tab-id="outer-tab-2"
+        role="tabpanel"
+        id="tab-panel-outer-tab-2"
+      >
+        <h2>Outer Tab 2</h2>
+        <p>This is the second tab of the outer tab area.</p>
+        <div class="nested-indicator">
+          <strong>Another Nested Tab Area Below:</strong> This tab also contains
+          a nested tab area with different content.
+        </div>
+
+        <!-- Inner Tab Area 2 Triggers -->
+        <div class="trigger-group">
+          <div
+            class="tab-trigger"
+            data-tab-target="inner-2-tab-x"
+            data-tab-area="inner-area-2"
+            data-group-id="inner-group-2"
+          >
+            Inner X
+          </div>
+          <div
+            class="tab-trigger"
+            data-tab-target="inner-2-tab-y"
+            data-tab-area="inner-area-2"
+            data-group-id="inner-group-2"
+          >
+            Inner Y
+          </div>
+        </div>
+
+        <!-- Nested Tab Area 2 -->
+        <div
+          class="decoupled-tabs-area"
+          data-tab-area-id="inner-area-2"
+          data-smooth-height="false"
+          data-gsap-enabled="false"
+          style="background: #f3e5f5; border-color: #9c27b0"
+        >
+          <div
+            class="decoupled-tabs-content is-active"
+            data-tab-id="inner-2-tab-x"
+            role="tabpanel"
+            id="tab-panel-inner-2-tab-x"
+          >
+            <h3>Inner Tab X</h3>
+            <p>This is tab X of the nested tab area inside Outer Tab 2.</p>
+            <div class="debug-info">
+              Tab ID: inner-2-tab-x | Area: inner-area-2
+            </div>
+          </div>
+
+          <div
+            class="decoupled-tabs-content"
+            data-tab-id="inner-2-tab-y"
+            role="tabpanel"
+            id="tab-panel-inner-2-tab-y"
+          >
+            <h3>Inner Tab Y</h3>
+            <p>This is tab Y of the nested tab area inside Outer Tab 2.</p>
+            <div class="debug-info">
+              Tab ID: inner-2-tab-y | Area: inner-area-2
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Outer Tab 3 -->
+      <div
+        class="decoupled-tabs-content"
+        data-tab-id="outer-tab-3"
+        role="tabpanel"
+        id="tab-panel-outer-tab-3"
+      >
+        <h2>Outer Tab 3</h2>
+        <p>This is the third tab of the outer tab area. No nested tabs here!</p>
+      </div>
+    </div>
+
+    <div
+      style="
+        margin-top: 40px;
+        padding: 20px;
+        background: #e8f5e9;
+        border-left: 4px solid #4caf50;
+      "
+    >
+      <h3>Test Instructions:</h3>
+      <ul>
+        <li>
+          Click the outer tab triggers to switch between Outer Tab 1, 2, and 3
+        </li>
+        <li>
+          When on Outer Tab 1, click the Inner A/B/C triggers to switch nested
+          tabs
+        </li>
+        <li>
+          When on Outer Tab 2, click the Inner X/Y triggers to switch different
+          nested tabs
+        </li>
+        <li>
+          Verify that nested tab states are preserved when switching outer tabs
+        </li>
+        <li>
+          <strong>Group Test:</strong> Verify that switching Inner A/B/C doesn't
+          affect Inner X/Y active states
+        </li>
+      </ul>
+    </div>
+
+    <script src="build/frontend/tabs.js"></script>
+    <script>
+      // Debug logging
+      document.addEventListener('DOMContentLoaded', () => {
+        console.log('Page loaded, checking tab areas...');
+
+        // Log clicks for debugging
+        document.querySelectorAll('[data-tab-target]').forEach((trigger) => {
+          trigger.addEventListener('click', (e) => {
+            console.log('Trigger clicked:', {
+              target: trigger.dataset.tabTarget,
+              area: trigger.dataset.tabArea,
+              group: trigger.dataset.groupId,
+            });
+          });
+        });
+      });
+    </script>
+  </body>
+</html>

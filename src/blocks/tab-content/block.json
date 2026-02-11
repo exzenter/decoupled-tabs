@@ -9,7 +9,7 @@
   "description": "A single tab panel. Must be placed inside a Tab Area block.",
   "keywords": ["tab", "panel", "content"],
   "textdomain": "decoupled-tabs",
-  "parent": ["decoupled-tabs/tab-area"],
+  "parent": ["decoupled-tabs/tab-area", "decoupled-tabs/tab-content"],
   "attributes": {
     "tabId": {
       "type": "string",

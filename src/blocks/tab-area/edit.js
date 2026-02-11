@@ -19,7 +19,10 @@ import { plus } from '@wordpress/icons';
 import { useDispatch, useSelect } from '@wordpress/data';
 import { createBlock } from '@wordpress/blocks';
 
-const ALLOWED_BLOCKS = ['decoupled-tabs/tab-content'];
+const ALLOWED_BLOCKS = [
+  'decoupled-tabs/tab-content',
+  'decoupled-tabs/tab-area',
+];
 
 export default function Edit({ attributes, setAttributes, clientId }) {
   const {
