@@ -1350,9 +1350,12 @@ window.SplitText = SplitText;
 
         // CRITICAL: Measure and store child heights BEFORE SplitText modifies the DOM
         // SplitText wraps text in divs which changes layout, especially with splitLines enabled
+        // Use getBoundingClientRect for precise sub-pixel measurements
         const childHeights = new Map();
         Array.from(target.children).forEach((child) => {
-          childHeights.set(child, child.offsetHeight);
+          // getBoundingClientRect gives precise fractional heights (e.g., 118.125px)
+          // offsetHeight rounds to integers which causes visual jumps
+          childHeights.set(child, child.getBoundingClientRect().height);
         });
 
         // If splitChildren is enabled, split each child element separately
@@ -1423,9 +1426,11 @@ window.SplitText = SplitText;
 
         // If splitLines is enabled, also lock line div heights and prevent wrapping
         // SplitText creates line wrapper divs that can cause layout shifts
+        // Use getBoundingClientRect for precise sub-pixel measurements
         if (config.splitLines && lines.length > 0) {
           lines.forEach((line) => {
-            const lineHeight = line.offsetHeight;
+            // Use getBoundingClientRect for fractional precision
+            const lineHeight = line.getBoundingClientRect().height;
             line.style.height = `${lineHeight}px`;
             line.style.overflow = 'hidden';
             line.style.whiteSpace = 'nowrap';
@@ -1445,31 +1450,37 @@ window.SplitText = SplitText;
           onComplete: () => {
             // eslint-disable-next-line no-console
             console.log('[gsapOnLeave] Timeline complete');
-            // Restore original values
-            target.style.whiteSpace = originalWhiteSpace;
-            target.style.overflow = originalOverflow;
-            target.style.height = originalHeight;
-            // Restore child styles
-            Array.from(target.children).forEach((child) => {
-              const originalStyles = childOriginalStyles.get(child);
-              if (originalStyles) {
-                child.style.height = originalStyles.height;
-                child.style.overflow = originalStyles.overflow;
-                child.style.whiteSpace = originalStyles.whiteSpace;
-              }
-            });
-            // Restore line styles if splitLines was enabled
-            if (config.splitLines && lines.length > 0) {
-              lines.forEach((line) => {
-                line.style.height = '';
-                line.style.overflow = '';
-                line.style.whiteSpace = '';
-              });
+
+            // CRITICAL: Revert SplitText FIRST to restore original DOM structure
+            // This removes all wrapper divs and returns text to its natural state
+            if (target.textSplitter) {
+              target.textSplitter.revert();
+              target.textSplitter = null;
             }
-            // Clear animation reference
-            target.currentTween = null;
-            // Call completion callback
-            onComplete();
+
+            // Use requestAnimationFrame to restore styles AFTER browser completes reflow
+            // This prevents the visual jump by ensuring DOM is fully settled
+            requestAnimationFrame(() => {
+              // Restore original styles after DOM is back to normal
+              target.style.whiteSpace = originalWhiteSpace;
+              target.style.overflow = originalOverflow;
+              target.style.height = originalHeight;
+
+              // Restore child styles
+              Array.from(target.children).forEach((child) => {
+                const originalStyles = childOriginalStyles.get(child);
+                if (originalStyles) {
+                  child.style.height = originalStyles.height;
+                  child.style.overflow = originalStyles.overflow;
+                  child.style.whiteSpace = originalStyles.whiteSpace;
+                }
+              });
+
+              // Clear animation reference
+              target.currentTween = null;
+              // Call completion callback
+              onComplete();
+            });
           },
         });
 
