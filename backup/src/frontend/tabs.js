@@ -1212,6 +1212,10 @@ window.SplitText = SplitText;
 
       // After parent tab switch, ensure nested tab areas are in a clean state
       // Nested active tab content may have stale GSAP artifacts (autoAlpha, visibility, etc.)
+      // eslint-disable-next-line no-console
+      console.log(
+        '[DEBUG completeTabSwitch] DONE, calling refreshNestedTabAreas',
+      );
       this.refreshNestedTabAreas(toTab);
     }
 

@@ -1,0 +1,17 @@
+.decoupled-tabs-area-editor {
+  padding: 0;
+  background: white;
+  min-height: 100px;
+}
+
+.decoupled-tabs-area-header {
+  display: none;
+}
+
+.decoupled-tabs-area-content
+  > .block-editor-inner-blocks
+  > .block-editor-block-list__layout {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}

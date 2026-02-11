@@ -1,0 +1,12 @@
+.decoupled-tabs-area {
+  position: relative;
+}
+
+/* Tab content visibility */
+.decoupled-tabs-area .decoupled-tabs-content {
+  display: none;
+}
+
+.decoupled-tabs-area .decoupled-tabs-content.is-active {
+  display: block;
+}

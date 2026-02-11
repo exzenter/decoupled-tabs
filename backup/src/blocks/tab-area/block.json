@@ -1,0 +1,86 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 3,
+  "name": "decoupled-tabs/tab-area",
+  "version": "1.1.0",
+  "title": "Tab Area",
+  "category": "layout",
+  "icon": "table-row-after",
+  "description": "A container for tabbed content. Add Tab Content blocks inside.",
+  "keywords": ["tabs", "tabbed", "content", "panels"],
+  "textdomain": "decoupled-tabs",
+  "attributes": {
+    "defaultTab": {
+      "type": "string",
+      "default": ""
+    },
+    "smoothHeightTransition": {
+      "type": "boolean",
+      "default": false
+    },
+    "transitionDuration": {
+      "type": "number",
+      "default": 300
+    },
+    "tabAreaId": {
+      "type": "string",
+      "default": ""
+    },
+    "gsapEnabled": {
+      "type": "boolean",
+      "default": false
+    },
+    "gsapShuffleIterations": {
+      "type": "number",
+      "default": 2
+    },
+    "gsapCharDuration": {
+      "type": "number",
+      "default": 0.02
+    },
+    "gsapStaggerAmount": {
+      "type": "number",
+      "default": 0.25
+    },
+    "gsapStaggerDelay": {
+      "type": "number",
+      "default": 0.03
+    },
+    "gsapOnEnterDuration": {
+      "type": "number",
+      "default": 0.02
+    },
+    "gsapSplitChildren": {
+      "type": "boolean",
+      "default": true
+    },
+    "gsapTimingMode": {
+      "type": "string",
+      "default": "same-duration",
+      "enum": ["same-duration", "same-speed"]
+    },
+    "gsapSplitLines": {
+      "type": "boolean",
+      "default": false
+    },
+    "gsapAnimateOnLoad": {
+      "type": "boolean",
+      "default": false
+    }
+  },
+  "supports": {
+    "html": false,
+    "align": ["wide", "full"],
+    "spacing": {
+      "margin": true,
+      "padding": true
+    },
+    "color": {
+      "background": true,
+      "text": true
+    }
+  },
+  "editorScript": "file:./index.js",
+  "editorStyle": "file:./index.css",
+  "style": "file:./style-index.css"
+}

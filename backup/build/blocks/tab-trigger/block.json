@@ -1,0 +1,73 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 3,
+  "name": "decoupled-tabs/tab-trigger",
+  "version": "1.0.0",
+  "title": "Tab Trigger",
+  "category": "layout",
+  "icon": "button",
+  "description": "A wrapper block that triggers a tab when clicked. Add any content inside.",
+  "keywords": [
+    "tab",
+    "trigger",
+    "button",
+    "link"
+  ],
+  "textdomain": "decoupled-tabs",
+  "attributes": {
+    "tabTarget": {
+      "type": "string",
+      "default": ""
+    },
+    "tabArea": {
+      "type": "string",
+      "default": ""
+    },
+    "isActiveOnLoad": {
+      "type": "boolean",
+      "default": false
+    },
+    "triggerId": {
+      "type": "string",
+      "default": ""
+    },
+    "groupId": {
+      "type": "string",
+      "default": ""
+    }
+  },
+  "supports": {
+    "html": false,
+    "align": [
+      "wide",
+      "full"
+    ],
+    "color": {
+      "background": true,
+      "text": true,
+      "link": true
+    },
+    "spacing": {
+      "margin": true,
+      "padding": true,
+      "blockGap": true
+    },
+    "layout": {
+      "allowSwitching": false,
+      "allowEditing": true,
+      "allowInheriting": true,
+      "default": {
+        "type": "constrained"
+      }
+    },
+    "__experimentalBorder": {
+      "color": true,
+      "radius": true,
+      "style": true,
+      "width": true
+    }
+  },
+  "editorScript": "file:./index.js",
+  "editorStyle": "file:./index.css",
+  "style": "file:./style-index.css"
+}
