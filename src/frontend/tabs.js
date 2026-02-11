@@ -311,10 +311,6 @@ window.SplitText = SplitText;
           });
 
           if (hasHashConflict) {
-            // eslint-disable-next-line no-console
-            console.log(
-              `Decoupled Tabs: Skipping active-on-load for trigger targeting "${tabId}" because another trigger in group "${groupId}" targets a hash tab.`,
-            );
             return true;
           }
         }
@@ -519,16 +515,6 @@ window.SplitText = SplitText;
         const targetTabArea = trigger.dataset.tabArea; // Optional: specify which tab area
         const groupId = trigger.dataset.groupId; // Optional: group ID for connected triggers
 
-        // Debug: Log trigger click
-        // eslint-disable-next-line no-console
-        console.log('[Trigger Click]', {
-          targetId,
-          targetTabArea,
-          groupId,
-          currentlyActive: trigger.classList.contains('is-active'),
-          triggerElement: trigger,
-        });
-
         // Handle group logic: deactivate other triggers in the same group
         if (groupId) {
           this.deactivateGroupTriggers(groupId, trigger);
@@ -596,15 +582,6 @@ window.SplitText = SplitText;
         `[data-group-id="${groupId}"]`,
       );
 
-      // Debug: Log group deactivation
-      // eslint-disable-next-line no-console
-      console.log('[Group Deactivation]', {
-        groupId,
-        currentTabArea,
-        currentTarget: currentTrigger.dataset.tabTarget,
-        totalTriggersInGroup: groupTriggers.length,
-      });
-
       groupTriggers.forEach((trigger) => {
         // Only deactivate triggers in the same tab area (or both have no tab area)
         const triggerTabArea = trigger.dataset.tabArea || null;
@@ -616,14 +593,6 @@ window.SplitText = SplitText;
           triggerTabArea === currentTabArea &&
           triggerGroupId === groupId
         ) {
-          // Debug: Log deactivation
-          // eslint-disable-next-line no-console
-          console.log('[Group Deactivation] Deactivating trigger:', {
-            target: trigger.dataset.tabTarget,
-            area: triggerTabArea,
-            group: triggerGroupId,
-          });
-
           // Remove active state
           trigger.classList.remove('is-active');
           trigger.setAttribute('aria-selected', 'false');
@@ -672,10 +641,6 @@ window.SplitText = SplitText;
     }
 
     switchToTab(tabId, tabAreaId = null, trigger = null) {
-      // Debug: Log tab switch
-      // eslint-disable-next-line no-console
-      console.log('[Switch Tab]', { tabId, tabAreaId, hasTrigger: !!trigger });
-
       // If no specific tab area is provided, target all tabs with the same ID
       if (!tabAreaId) {
         // Find all tabs with matching ID across all tab areas
@@ -686,14 +651,6 @@ window.SplitText = SplitText;
             // Check if this area is currently visible
             const isVisible = this.isTabAreaVisible(area.element);
             matchingTabs.push({ tab: found, area, areaId, isVisible });
-
-            if (!isVisible) {
-              // eslint-disable-next-line no-console
-              console.log(
-                '[Switch Tab] Area is hidden, will skip animations:',
-                areaId,
-              );
-            }
           }
         }
 
@@ -775,15 +732,6 @@ window.SplitText = SplitText;
       } = tabAreaData;
       const duration = immediate ? 0 : transitionDuration;
 
-      // Debug: Log tab activation
-      // eslint-disable-next-line no-console
-      console.log('[Activate Tab]', {
-        tabId: tab.dataset.tabId,
-        areaId: element.dataset.tabAreaId,
-        immediate,
-        isAlreadyActive: currentTab === tab,
-      });
-
       if (currentTab === tab) {
         return; // Already active
       }
@@ -860,15 +808,6 @@ window.SplitText = SplitText;
 
         tab.classList.add('is-active');
         tab.setAttribute('tabindex', '0'); // Add to tab order
-
-        // Debug: Log instant switch
-        // eslint-disable-next-line no-console
-        console.log('[Activate Tab] Instant switch complete:', {
-          tabId: tab.dataset.tabId,
-          areaId: element.dataset.tabAreaId,
-          hasActiveClass: tab.classList.contains('is-active'),
-          resetInactiveTabs: true,
-        });
 
         tabAreaData.isTransitioning = false;
       }
@@ -977,10 +916,6 @@ window.SplitText = SplitText;
     }
 
     updateTriggerStates(activeTabId, tabAreaId = null) {
-      // Debug: Log trigger state update
-      // eslint-disable-next-line no-console
-      console.log('[Update Trigger States]', { activeTabId, tabAreaId });
-
       document.querySelectorAll('[data-tab-target]').forEach((trigger) => {
         const triggerTabArea = trigger.dataset.tabArea || null;
         const triggerTabId = trigger.dataset.tabTarget;
@@ -1024,13 +959,6 @@ window.SplitText = SplitText;
         }
 
         if (triggerTabId === activeTabId) {
-          // eslint-disable-next-line no-console
-          console.log('[Update Trigger States] Activating:', {
-            target: triggerTabId,
-            area: triggerTabArea,
-            group: groupId,
-          });
-
           trigger.classList.add('is-active');
           trigger.setAttribute('aria-selected', 'true');
           // Apply active CSS
@@ -1042,12 +970,6 @@ window.SplitText = SplitText;
           }
         } else {
           // Only deactivate if in the same tab area
-          // eslint-disable-next-line no-console
-          console.log('[Update Trigger States] Deactivating:', {
-            target: triggerTabId,
-            area: triggerTabArea,
-          });
-
           trigger.classList.remove('is-active');
           trigger.setAttribute('aria-selected', 'false');
           // Apply default CSS
@@ -1407,14 +1329,6 @@ window.SplitText = SplitText;
         }
       });
 
-      if (detached.length > 0) {
-        // eslint-disable-next-line no-console
-        console.log(
-          '[Nested Protection] Detached nested tab areas:',
-          detached.length,
-        );
-      }
-
       return detached;
     }
 
@@ -1431,14 +1345,6 @@ window.SplitText = SplitText;
           placeholder.parentNode.removeChild(placeholder);
         }
       });
-
-      if (detached.length > 0) {
-        // eslint-disable-next-line no-console
-        console.log(
-          '[Nested Protection] Reattached nested tab areas:',
-          detached.length,
-        );
-      }
     }
 
     /**
@@ -1649,8 +1555,6 @@ window.SplitText = SplitText;
 
       // Kill existing animation if present
       if (target.currentTween) {
-        // eslint-disable-next-line no-console
-        console.log('[gsapOnLeave] Killing existing tween');
         target.currentTween.kill();
       }
 
@@ -1690,9 +1594,6 @@ window.SplitText = SplitText;
               !child.hasAttribute('data-nested-placeholder'),
           );
 
-          // eslint-disable-next-line no-console
-          console.log('[gsapOnLeave] Splitting children:', children.length);
-
           if (children.length === 0) {
             // No children, split the target itself
             target.textSplitter = new SplitText(target, { type: splitType });
@@ -1701,8 +1602,6 @@ window.SplitText = SplitText;
             target.textSplitter = new SplitText(children, { type: splitType });
           }
         } else {
-          // eslint-disable-next-line no-console
-          console.log('[gsapOnLeave] Splitting entire target as one block');
           // Split the entire target as one block
           target.textSplitter = new SplitText(target, { type: splitType });
         }
@@ -1713,14 +1612,6 @@ window.SplitText = SplitText;
         // Get the character array from the text splitter
         const chars = target.textSplitter.chars;
         const lines = target.textSplitter.lines || [];
-
-        // eslint-disable-next-line no-console
-        console.log(
-          '[gsapOnLeave] SplitText created, chars:',
-          chars.length,
-          'lines:',
-          lines.length,
-        );
 
         // Validate that we have characters to animate
         if (!chars || chars.length === 0) {
@@ -1819,14 +1710,8 @@ window.SplitText = SplitText;
           },
         });
 
-        // eslint-disable-next-line no-console
-        console.log('[gsapOnLeave] Building timeline with config:', config);
-
         // If splitLines is enabled and we have lines, animate each line independently
         if (config.splitLines && lines.length > 0) {
-          // eslint-disable-next-line no-console
-          console.log('[gsapOnLeave] Animating lines independently');
-
           // Animate each line - all lines start at the same time (position 0)
           lines.forEach((line) => {
             // Get all characters in this line
@@ -1906,9 +1791,6 @@ window.SplitText = SplitText;
             );
           });
         }
-
-        // eslint-disable-next-line no-console
-        console.log('[gsapOnLeave] Timeline built, duration:', tl.duration());
 
         // Store timeline reference on element
         target.currentTween = tl;
