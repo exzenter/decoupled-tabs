@@ -7,7 +7,7 @@ import {
 import { PanelBody, TextControl, ToggleControl } from '@wordpress/components';
 
 export default function Edit({ attributes, setAttributes, clientId }) {
-  const { tabTarget, tabArea, isActiveOnLoad, triggerId } = attributes;
+  const { tabTarget, tabArea, isActiveOnLoad, triggerId, groupId } = attributes;
 
   const blockProps = useBlockProps({
     className: 'decoupled-tabs-trigger-editor',
@@ -48,6 +48,15 @@ export default function Edit({ attributes, setAttributes, clientId }) {
             )}
             checked={isActiveOnLoad}
             onChange={(value) => setAttributes({ isActiveOnLoad: value })}
+          />
+          <TextControl
+            label={__('Group ID (optional)', 'decoupled-tabs')}
+            help={__(
+              'Connect multiple triggers with the same Group ID. Only one trigger in a group can be active at a time.',
+              'decoupled-tabs',
+            )}
+            value={groupId}
+            onChange={(value) => setAttributes({ groupId: value })}
           />
         </PanelBody>
       </InspectorControls>

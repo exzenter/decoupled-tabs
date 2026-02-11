@@ -25,6 +25,10 @@
     "triggerId": {
       "type": "string",
       "default": ""
+    },
+    "groupId": {
+      "type": "string",
+      "default": ""
     }
   },
   "supports": {

@@ -1,7 +1,7 @@
 import { useBlockProps, InnerBlocks } from '@wordpress/block-editor';
 
 export default function save({ attributes }) {
-  const { tabTarget, tabArea, isActiveOnLoad, triggerId } = attributes;
+  const { tabTarget, tabArea, isActiveOnLoad, triggerId, groupId } = attributes;
 
   const dataAttributes = {
     'data-tab-target': tabTarget,
@@ -16,6 +16,11 @@ export default function save({ attributes }) {
   // Add active on load flag
   if (isActiveOnLoad) {
     dataAttributes['data-active-on-load'] = 'true';
+  }
+
+  // Add group ID if specified
+  if (groupId) {
+    dataAttributes['data-group-id'] = groupId;
   }
 
   const blockProps = useBlockProps.save({

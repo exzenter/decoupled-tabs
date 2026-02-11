@@ -446,6 +446,12 @@ window.SplitText = SplitText;
         e.preventDefault();
         const targetId = trigger.dataset.tabTarget;
         const targetTabArea = trigger.dataset.tabArea; // Optional: specify which tab area
+        const groupId = trigger.dataset.groupId; // Optional: group ID for connected triggers
+
+        // Handle group logic: deactivate other triggers in the same group
+        if (groupId) {
+          this.deactivateGroupTriggers(groupId, trigger);
+        }
 
         this.switchToTab(targetId, targetTabArea, trigger);
       });
@@ -492,6 +498,27 @@ window.SplitText = SplitText;
       if (cssToApply) {
         this.applyInlineStyles(trigger, cssToApply);
       }
+    }
+
+    /**
+     * Deactivate all triggers in the same group except the current one
+     * @param {string} groupId - The group ID to target
+     * @param {HTMLElement} currentTrigger - The trigger that was just activated
+     */
+    deactivateGroupTriggers(groupId, currentTrigger) {
+      // Find all triggers with the same group ID
+      const groupTriggers = document.querySelectorAll(
+        `[data-group-id="${groupId}"]`,
+      );
+
+      groupTriggers.forEach((trigger) => {
+        if (trigger !== currentTrigger) {
+          // Remove active state
+          trigger.classList.remove('is-active');
+          trigger.setAttribute('aria-selected', 'false');
+          this.applyTriggerCSS(trigger, 'default');
+        }
+      });
     }
 
     applyInlineStyles(element, cssString) {
@@ -805,6 +832,7 @@ window.SplitText = SplitText;
       document.querySelectorAll('[data-tab-target]').forEach((trigger) => {
         const triggerTabArea = trigger.dataset.tabArea;
         const triggerTabId = trigger.dataset.tabTarget;
+        const groupId = trigger.dataset.groupId;
 
         // If tabAreaId is null, update all triggers targeting this tab ID
         // regardless of their tab area assignment
@@ -814,6 +842,11 @@ window.SplitText = SplitText;
             trigger.classList.add('is-active');
             trigger.setAttribute('aria-selected', 'true');
             this.applyTriggerCSS(trigger, 'active');
+
+            // If this trigger has a group ID, deactivate other triggers in the group
+            if (groupId) {
+              this.deactivateGroupTriggers(groupId, trigger);
+            }
           } else {
             trigger.classList.remove('is-active');
             trigger.setAttribute('aria-selected', 'false');
@@ -832,6 +865,11 @@ window.SplitText = SplitText;
           trigger.setAttribute('aria-selected', 'true');
           // Apply active CSS
           this.applyTriggerCSS(trigger, 'active');
+
+          // If this trigger has a group ID, deactivate other triggers in the group
+          if (groupId) {
+            this.deactivateGroupTriggers(groupId, trigger);
+          }
         } else {
           trigger.classList.remove('is-active');
           trigger.setAttribute('aria-selected', 'false');
@@ -1093,6 +1131,19 @@ window.SplitText = SplitText;
         target.style.height = '';
       }
 
+      // Restore child element heights that were locked during animation
+      Array.from(target.children).forEach((child) => {
+        if (child.style.height && child.style.height.endsWith('px')) {
+          child.style.height = '';
+        }
+        if (child.style.overflow === 'hidden') {
+          child.style.overflow = '';
+        }
+        if (child.style.whiteSpace === 'nowrap') {
+          child.style.whiteSpace = '';
+        }
+      });
+
       // Clear all GSAP properties if GSAP is available
       if (typeof gsap !== 'undefined') {
         gsap.set(target, { clearProps: 'all' });
@@ -1297,6 +1348,13 @@ window.SplitText = SplitText;
         // eslint-disable-next-line no-console
         console.log('[gsapOnLeave] Creating SplitText for target');
 
+        // CRITICAL: Measure and store child heights BEFORE SplitText modifies the DOM
+        // SplitText wraps text in divs which changes layout, especially with splitLines enabled
+        const childHeights = new Map();
+        Array.from(target.children).forEach((child) => {
+          childHeights.set(child, child.offsetHeight);
+        });
+
         // If splitChildren is enabled, split each child element separately
         if (config.splitChildren) {
           // Get direct children of the target
@@ -1340,14 +1398,39 @@ window.SplitText = SplitText;
           return false;
         }
 
-        // Fix the height of the target element AFTER SplitText to prevent layout shifts
-        // SplitText converts text to inline-block which can change the layout
-        const targetHeight = target.offsetHeight;
+        // Now lock child heights using the pre-measured values to prevent layout shifts
+        // This prevents flickering when SplitText wraps lines and characters in divs
         const originalHeight = target.style.height;
-        target.style.height = `${targetHeight}px`;
+        const childOriginalStyles = new Map();
+        Array.from(target.children).forEach((child) => {
+          const storedHeight = childHeights.get(child);
+          if (storedHeight && !child.style.height) {
+            // Store original styles for restoration
+            childOriginalStyles.set(child, {
+              height: child.style.height,
+              overflow: child.style.overflow,
+              whiteSpace: child.style.whiteSpace,
+            });
+            // Lock height and prevent wrapping
+            child.style.height = `${storedHeight}px`;
+            child.style.overflow = 'hidden';
+            child.style.whiteSpace = 'nowrap';
+          }
+        });
 
         // Set all characters to opacity 0 initially
         gsap.set(chars, { autoAlpha: 0 });
+
+        // If splitLines is enabled, also lock line div heights and prevent wrapping
+        // SplitText creates line wrapper divs that can cause layout shifts
+        if (config.splitLines && lines.length > 0) {
+          lines.forEach((line) => {
+            const lineHeight = line.offsetHeight;
+            line.style.height = `${lineHeight}px`;
+            line.style.overflow = 'hidden';
+            line.style.whiteSpace = 'nowrap';
+          });
+        }
 
         // Prevent line breaks and height jumps during scramble animation
         // Random characters can be wider than original content, causing unwanted wrapping
@@ -1366,6 +1449,23 @@ window.SplitText = SplitText;
             target.style.whiteSpace = originalWhiteSpace;
             target.style.overflow = originalOverflow;
             target.style.height = originalHeight;
+            // Restore child styles
+            Array.from(target.children).forEach((child) => {
+              const originalStyles = childOriginalStyles.get(child);
+              if (originalStyles) {
+                child.style.height = originalStyles.height;
+                child.style.overflow = originalStyles.overflow;
+                child.style.whiteSpace = originalStyles.whiteSpace;
+              }
+            });
+            // Restore line styles if splitLines was enabled
+            if (config.splitLines && lines.length > 0) {
+              lines.forEach((line) => {
+                line.style.height = '';
+                line.style.overflow = '';
+                line.style.whiteSpace = '';
+              });
+            }
             // Clear animation reference
             target.currentTween = null;
             // Call completion callback
