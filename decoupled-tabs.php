@@ -3,7 +3,9 @@
  * Plugin Name: Decoupled Tabs
  * Description: A Gutenberg block for decoupled tabbed content - any block can trigger tab switching
  * Version: 1.1.0
- * Author: 
+ * Plugin URI: https://exzent.de/plugins/
+ * Author: EXZENT
+ * Author URI: https://exzent.de
  * License: GPL-2.0-or-later
  * Text Domain: decoupled-tabs
  */
